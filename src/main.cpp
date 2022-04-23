@@ -5,13 +5,8 @@
  * @TechChangeTheWorld
  * @WHUROBOCON_Alright_Reserved
  */
-// Standard Headers
-#include <iostream>
-#include <cmath>
-
-// System Headers
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+// User Headers
+#include "shader.hpp"
 
 // 在创建窗口之后，渲染循环初始化之前注册这些回调函数
 
@@ -61,48 +56,7 @@ int main()
     }
 
     // 3. build and compile our shader program
-    // 3.1. vertexShader
-    unsigned int vertexShader;                                  // 创建一个用ID(1)来引用的着色器对象，这个对象的类型为unsigned int
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);            // 把需要创建的着色器类型以参数形式提供
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL); // 要编译的着色器对象，传递的源码字符串数量，顶点着色器的源码
-    glCompileShader(vertexShader);                              // 编译目标shader
-    int success;                                                // 是否成功编译
-    char infoLog[521];                                          // 储存错误消息（如果有的话）的容器
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);   // 检查是否编译成功
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog); // 获取错误消息
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                  << infoLog << std::endl; // 打印错误消息
-    }
-    // 3.2. fragmentShader
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-    // 3.3. link shaders to shaderProgram
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();           // 创造一个着色器程序对象(Shader Program Object)，并返回新创建程序对象的ID引用
-    glAttachShader(shaderProgram, vertexShader); // 把之前编译的着色器附加到程序对象上
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);                            // 要使用刚才编译的着色器，则必须把它们链接(Link)为一个着色器程序对象
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success); // 检查是否链接成功
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::PROGRAM::LINK::LINK_FAILED\n"
-                  << infoLog << std::endl;
-    }
-    // 3.4. delete linked shader
-    glDeleteShader(vertexShader); // 把着色器对象链接到程序对象以后，可以删除着色器对象（不再需要这些了）
-    glDeleteShader(fragmentShader);
+    Shader shaderProgram("./shaders/shader.vs", "./shaders/shader.fs");
 
     // 4. set up vertex data (and buffer(s)) and configure vertex attributes
     // 4.1. set up verteices and indices
@@ -154,7 +108,7 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // 状态设置函数，设置glClear的填充色
         glClear(GL_COLOR_BUFFER_BIT);         // 状态使用函数，用于清空屏幕的颜色缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
         // 5.2.2. 激活着色器程序
-        glUseProgram(shaderProgram); // 激活目标程序对象
+        shaderProgram.use();
         // // 5.2.3. 更新uniform参数
         // float timeValue = glfwGetTime(); // 获取运行的秒数
         // float greenValue = (std::sin(timeValue) / 2.0f) + 0.5f;
@@ -173,7 +127,7 @@ int main()
     glDeleteBuffers(1, &EBO);
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
+    // glDeleteProgram(shaderProgram);
     glfwTerminate(); // 释放/删除之前的分配的所有资源
 
     return 0;

@@ -18,14 +18,19 @@ message("-- CMAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}") # 输出从cmake运行传�
 message("-- CAMKE_BUILD_GENERATOR : ${CAMKE_BUILD_GENERATOR}") # 输出从cmake运行传过来的buildGenerator参数是什么，如x86和x64等，这个参数是自定义的，如果不传默认编译64位(我当前系统64位)
 
 find_package(glfw3)
-include_directories("/home/ren/Require/glad/include")
 
-file(GLOB project_file glad.c shader.hpp main.cpp) # 需要把glad.c也包含进来
-add_executable(${PROJECT_NAME} ${project_file})
+include_directories("/home/ren/Require/glad/include")
+include_directories("thirdclass")
+include_directories("inc")
+include_directories("src")
+
+add_executable(${PROJECT_NAME} src/main.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     -lglfw3
     -lGL
+    -lGLU
+    -lglut
     -lm
     -lXrandr
     -lXi
