@@ -56,7 +56,7 @@ int main()
     }
 
     // 3. build and compile our shader program
-    Shader shaderProgram("./shaders/shader.vs", "./shaders/shader.fs");
+    Shader shaderProgram("../shaders/shader.vs", "../shaders/shader.fs");
 
     // 4. set up vertex data (and buffer(s)) and configure vertex attributes
     // 4.1. set up verteices and indices

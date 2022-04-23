@@ -14,10 +14,8 @@
 
 ## Features
 
-1. 添加了 README.md
-2. 添加了新顶点属性——颜色
-3. 添加了 result 图片
-4. 添加了 shader.hpp
+1. 调整了代码结构
+2. 添加了着色器类(in shader.hpp)
 
 ## Usage
 
