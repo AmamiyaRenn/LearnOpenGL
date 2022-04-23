@@ -20,7 +20,7 @@ message("-- CAMKE_BUILD_GENERATOR : ${CAMKE_BUILD_GENERATOR}") # 输出从cmake�
 find_package(glfw3)
 include_directories("/home/ren/Require/glad/include")
 
-file(GLOB project_file glad.c main.cpp) # 需要把glad.c也包含进来
+file(GLOB project_file glad.c shader.hpp main.cpp) # 需要把glad.c也包含进来
 add_executable(${PROJECT_NAME} ${project_file})
 
 target_link_libraries(${PROJECT_NAME}
