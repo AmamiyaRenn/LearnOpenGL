@@ -1,30 +1,15 @@
-// #version 460 core
-// layout(location = 0) in vec3 aPos;//layout关键字把输入(location)链接到顶点数据 ；使用location关键字，从而在CPU上配置顶点属性；使用in关键字，在顶点着色器中声明所有的输入顶点属性(Input Vertex Attribute)
-// out vec4 vertexColor;// 为片段着色器指定一个颜色输出
-
-// void main() {
-// 	gl_Position = vec4(aPos, 1.0f); // 把位置数据赋值给预定义的gl_Position变量（这个变量是vec4类型，所以要设置w）
-// 	vertexColor = vec4(0.5, 0.0, 0.0, 1.0);
-// }
-
-// #version 460 core
-// out vec4 FragColor;
-
-// in vec4 vertexColor;// 从顶点着色器传来的输入变量（名称相同、类型相同）
-
-// void main() {
-// 	FragColor = vertexColor;
-// }
-
 #version 460 core
-layout(location = 0) in vec3 aPos;
+layout(location = 0) in vec3 aPos;// 位置变量的属性位置值为 0 
+layout(location = 1) in vec3 aColor;// 颜色变量的属性位置值为 1
+out vec3 ourColor;// 向片段着色器输出一个颜色
 void main() {
 	gl_Position = vec4(aPos, 1.0f); // 把位置数据赋值给预定义的gl_Position变量（这个变量是vec4类型，所以要设置w）
+	ourColor = aColor;// 将ourColor设置为我们从顶点数据那里得到的输入颜色
 }
 
 #version 460 core
 out vec4 FragColor;
-uniform vec4 ourColor;// 在OpenGL程序代码中设定这个变量；Uniform是一种从CPU中的应用向GPU中的着色器发送数据的方式(Global)
+in vec3 ourColor;
 void main() {
-	FragColor = ourColor;
+	FragColor = vec4(ourColor, 1.0f);
 }
