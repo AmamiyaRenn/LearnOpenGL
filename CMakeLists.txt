@@ -20,11 +20,10 @@ message("-- CAMKE_BUILD_GENERATOR : ${CAMKE_BUILD_GENERATOR}") # 输出从cmake�
 find_package(glfw3)
 
 include_directories("/home/ren/Require/glad/include")
-include_directories("thirdclass")
-include_directories("inc")
-include_directories("src")
+include_directories("thirdclass" "inc" "src")
 
-add_executable(${PROJECT_NAME} src/main.cpp)
+file(GLOB project_file thirdclass/glad.c src/main.cpp) # 需要把glad.c也包含进来
+add_executable(${PROJECT_NAME} ${project_file}) #这里一定要把构成可执行文件的所有源文件都添加进去，否则就会出错！！！
 
 target_link_libraries(${PROJECT_NAME}
     -lglfw3
