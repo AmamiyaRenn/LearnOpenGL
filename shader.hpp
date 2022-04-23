@@ -62,13 +62,16 @@ Shader::Shader(const char *vertexFilePath, const char *fragmentFilePath)
     {
         std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
     }
-    const char *vShaderCode = vertexCode.c_str(); // 把string中的数据转化为char[]
-    const char *fShaderCode = fragmentCode.c_str();
+    const char *vertexShaderSource = vertexCode.c_str(); // 把string中的数据转化为char[]
+    const char *fragmentShaderSource = fragmentCode.c_str();
 
     // 2. 编译着色器
-    unsigned int vertexShader, fragmentShader;
-    int success;
-    char infoLog[512];
+    unsigned int vertexShader, fragmentShader;                  // 创建着色器对象，这个对象的类型为unsigned int
+    int success;                                                // 是否成功编译
+    char infoLog[512];                                          // 储存错误消息（如果有的话）的容器
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);            // 把需要创建的着色器类型以参数形式提供
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL); // 要编译的着色器对象，传递的源码字符串数量，顶点着色器的源码
+    glCompileShader(vertexShader);                              // 编译目标shader
 }
 
 #endif
