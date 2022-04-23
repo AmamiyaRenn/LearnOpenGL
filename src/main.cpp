@@ -7,6 +7,7 @@
  */
 // User Headers
 #include "shader.hpp"
+#include "stb_image.h"
 
 // 在创建窗口之后，渲染循环初始化之前注册这些回调函数
 
@@ -39,21 +40,22 @@ int main()
         return -1;
     }
 
-    // 3. build and compile our shader program
+    // 3. build and compile shader program
     Shader shaderProgram("../shaders/shader.vs", "../shaders/shader.fs");
 
     // 4. set up vertex data (and buffer(s)) and configure vertex attributes
-    // 4.1. set up verteices and indices
+    // 4.1. set up verteices, indices, and texCoords
     float vertices[] = {
-        // 位置             // 颜色
-        0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // 右下
-        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 左下
-        0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // 顶部
+        //---- 位置 ----    ---- 颜色 ----   - 纹理坐标 -
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // 右上
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // 右下
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
+        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f   // 左上
     };
     unsigned int indices[] = {
         // 注意索引从0开始!
-        0, 1, 2, // 第一个三角形
-    };
+        0, 1, 3, // 第一个三角形
+        1, 2, 3};
     // 4.2. set VBO
     unsigned int VBO;      // 通过一个缓冲ID(1)生成一个顶点缓冲对象(Vertex Buffer Object)，它会在GPU内存（通常被称为显存）中储存大量顶点
     glGenBuffers(1, &VBO); // 从这一刻起，使用的任何（在GL_ARRAY_BUFFER目标上的）缓冲调用都会用来配置当前绑定的缓冲(VBO)
@@ -65,47 +67,81 @@ int main()
     // 把用户定义的数据复制到当前绑定缓冲的函数；目标缓冲的类型，参数指定传输数据的大小(以字节为单位)，希望发送的实际数据，希望显卡如何管理给定的数据
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     // 4.4. set EBO
-    unsigned int EBO; // 生成一个索引缓冲对象(Element Buffer Object)
-    glGenBuffers(1, &EBO);
+    unsigned int EBO;                                                                // 生成一个索引缓冲对象(Element Buffer Object)
+    glGenBuffers(1, &EBO);                                                           // 生成一个缓冲区对象
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);                                      // 绑定EBO
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // 把索引复制到缓冲里
     // 4.5. set vertice attributes
     // 4.5.1. set position attributes
     // 顶点属性(location)，顶点属性的数据大小，数据的类型，是否希望数据被标准化(Normalize)，步长(从这个属性第二次出现的地方到整个数组0位置之间有多少字节)，位置数据在缓冲中起始位置的偏移量(Offset)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0); // 以顶点属性位置值作为参数，启用顶点属性
     // 4.5.2. set color attributes
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float))); // location=1, offset=3*sizeof(float)
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float))); // location=1, offset=3*sizeof(float)
     glEnableVertexAttribArray(1);                                                                    // 启用1号(location=1)属性
-
+    // 4.5.3 set texCoords attributes
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    // 4.6 解绑不用的对象
     glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑EBO（由于glVertexAttribPointer()函数已经把VBO登记好了）
     glBindVertexArray(0);             // 解绑VAO（需要用到VAO时再绑定）（在需要VAO时请不要解绑EBO）
 
-    // 5. 渲染循环(RenderLoop)
+    // 5. process textures
+    // 5.1. 指定纹理坐标
+    float texCoords[] = {
+        0.0f, 0.0f, // 左下角
+        1.0f, 0.0f, // 右下角
+        0.5f, 1.0f  // 上中
+    };
+    // 5.1. 生成并绑定纹理对象
+    unsigned int texture;                  // 创建纹理对象
+    glGenTextures(1, &texture);            // 输入生成纹理的数量，然后把它们储存在第二个参数的unsigned int数组中
+    glBindTexture(GL_TEXTURE_2D, texture); // 绑定这个纹理对象，让之后任何的纹理指令都可以配置当前绑定的纹理
+    // 5.2. 为当前绑定的纹理对象设置环绕、过滤方式
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);     // S轴环绕设置为重复
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);     // T轴环绕设置为重复
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // 缩小时用线性插值过滤
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 放大时用线性插值过滤
+    // 5.3. 加载并生成纹理
+    int img_width, img_height, nrChannels;                                                                  // 宽度、高度和颜色通道的个数
+    unsigned char *data = stbi_load("../resourses/container.jpg", &img_width, &img_height, &nrChannels, 0); // 加载图片，并填充宽、高、通道数
+    if (data)
+    {
+        //纹理目标; 多级渐远纹理的级别; 纹理储存格式; 最终纹理的宽高; 总是被设为0（历史遗留的问题）; 源图的格式和数据类型(目前设置为char(byte)数组); 图像数据
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data); // 让当前绑定的纹理对象附加上纹理图像
+        glGenerateMipmap(GL_TEXTURE_2D);                                                                  // 自动生成Mipmap
+    }
+    else
+        std::cout << "Failed to load texture" << std::endl;
+    // 5.4. 释放图像内存
+    stbi_image_free(data); // 生成了纹理和相应的多级渐远纹理后，释放图像的内存
+
+    // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
     {
-        // 5.1. 输入
+        // 6.1. 输入
         processInput(window);
 
-        // 5.2. 渲染指令
-        // 5.2.1. 清理屏幕
+        // 6.2. 渲染指令
+        // 6.2.1. 清理屏幕
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // 状态设置函数，设置glClear的填充色
         glClear(GL_COLOR_BUFFER_BIT);         // 状态使用函数，用于清空屏幕的颜色缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
-        // 5.2.2. 激活着色器程序
+        // 6.2.2. 激活着色器程序
         shaderProgram.use();
-        // 5.2.3. 更新uniform参数
-        // shaderProgram.setFloat("bias", 0.25f); // TODO: practice2
-        // 5.2.4. 画图
+        // 6.2.3. 更新uniform参数
+        // shaderProgram.setFloat("bias", 0.25f);
+        // 6.2.4. 画图
         // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); // 根据索引改变当前program中目标uniform值
+        glBindTexture(GL_TEXTURE_2D, texture);               // 绑定纹理
         glBindVertexArray(VAO);                              // 绑定VAO
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0); // 绘制模式，打算绘制顶点的个数，索引类型，指定EBO中的偏移量
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 绘制模式，打算绘制顶点的个数，索引类型，指定EBO中的偏移量
 
-        // 5.3. 检查并调用事件，交换缓冲
+        // 6.3. 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // window对象交换颜色缓冲（它是一个储存着GLFW窗口每一个像素颜色值的大缓冲），在这一迭代中被用来绘制，并且将作为输出显示在屏幕上
         glfwPollEvents();        // 检查有没有触发什么事件（比如键盘输入、鼠标移动等）、更新窗口状态，并调用对应的回调函数（可以通过回调方法手动设置）
     }
 
-    // 6. 回收资源
+    // 7. 回收资源
     glDeleteBuffers(1, &EBO);
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);

@@ -22,7 +22,7 @@ find_package(glfw3)
 include_directories("/home/ren/Require/glad/include")
 include_directories("thirdclass" "inc" "src")
 
-file(GLOB project_file thirdclass/glad.c src/main.cpp) # 需要把glad.c也包含进来
+file(GLOB project_file thirdclass/glad.c thirdclass/stb_image.cpp src/main.cpp) # 需要把glad.c也包含进来
 add_executable(${PROJECT_NAME} ${project_file}) #这里一定要把构成可执行文件的所有源文件都添加进去，否则就会出错！！！
 
 target_link_libraries(${PROJECT_NAME}
