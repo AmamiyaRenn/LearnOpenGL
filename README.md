@@ -8,6 +8,11 @@
 
 # LearnOpenGL 记录
 
+## 说明
+
+学习 openngl 时的记录
+[LearnOpenGL CN](https://learnopengl-cn.github.io)网址
+
 ## Result
 
 ![result](result.png)
