@@ -93,10 +93,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);         // 状态使用函数，用于清空屏幕的颜色缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
         // 5.2.2. 激活着色器程序
         shaderProgram.use();
-        // // 5.2.3. 更新uniform参数
-        // float timeValue = glfwGetTime(); // 获取运行的秒数
-        // float greenValue = (std::sin(timeValue) / 2.0f) + 0.5f;
-        // int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor"); // 在目标程序中查询uniform ourColor的位置值
+        // 5.2.3. 更新uniform参数
+        // shaderProgram.setFloat("bias", 0.25f); // TODO: practice2
         // 5.2.4. 画图
         // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); // 根据索引改变当前program中目标uniform值
         glBindVertexArray(VAO);                              // 绑定VAO
