@@ -20,15 +20,18 @@ void processInput(GLFWwindow *window);
 
 const char *vertexShaderSource = "#version 460 core\n"
                                  "layout(location = 0) in vec3 aPos;\n"
+                                 "layout(location = 1) in vec3 aColor;\n"
+                                 "out vec3 ourColor;\n"
                                  "void main() {\n"
                                  "	gl_Position = vec4(aPos, 1.0f);\n"
+                                 "  ourColor = aColor;\n"
                                  "}\0";
 
 const char *fragmentShaderSource = "#version 460 core\n"
                                    "out vec4 FragColor;\n"
-                                   "uniform vec4 ourColor;\n"
+                                   "in vec3 ourColor;\n"
                                    "void main() {\n"
-                                   "	FragColor = ourColor;\n"
+                                   "	FragColor = vec4(ourColor, 1.0f);\n"
                                    "}\0";
 
 int main()
@@ -104,15 +107,14 @@ int main()
     // 4. set up vertex data (and buffer(s)) and configure vertex attributes
     // 4.1. set up verteices and indices
     float vertices[] = {
-        0.5f, 0.5f, 0.0f,   // 右上角
-        0.5f, -0.5f, 0.0f,  // 右下角
-        -0.5f, -0.5f, 0.0f, // 左下角
-        -0.5f, 0.5f, 0.0f   // 左上角
+        // 位置             // 颜色
+        0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // 右下
+        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // 左下
+        0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // 顶部
     };
     unsigned int indices[] = {
         // 注意索引从0开始!
-        0, 1, 3, // 第一个三角形
-        1, 2, 3  // 第二个三角形
+        0, 1, 2, // 第一个三角形
     };
     // 4.2. set VBO
     unsigned int VBO;      // 通过一个缓冲ID(1)生成一个顶点缓冲对象(Vertex Buffer Object)，它会在GPU内存（通常被称为显存）中储存大量顶点
@@ -130,13 +132,16 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);                                      // 绑定EBO
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // 把索引复制到缓冲里
     // 4.5. set vertice attributes
+    // 4.5.1. set position attributes
     // 顶点属性(location)，顶点属性的数据大小，数据的类型，是否希望数据被标准化(Normalize)，步长(从这个属性第二次出现的地方到整个数组0位置之间有多少字节)，位置数据在缓冲中起始位置的偏移量(Offset)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0); // 以顶点属性位置值作为参数，启用顶点属性
+    // 4.5.2. set color attributes
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float))); // location=1, offset=3*sizeof(float)
+    glEnableVertexAttribArray(1);                                                                    // 启用1号(location=1)属性
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑EBO（由于glVertexAttribPointer()函数已经把VBO登记好了）
     glBindVertexArray(0);             // 解绑VAO（需要用到VAO时再绑定）（在需要VAO时请不要解绑EBO）
-    //// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // 应用到所有的三角形的正面和背面，用线来绘制
 
     // 5. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
@@ -150,16 +155,14 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);         // 状态使用函数，用于清空屏幕的颜色缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
         // 5.2.2. 激活着色器程序
         glUseProgram(shaderProgram); // 激活目标程序对象
-        // 5.2.3. 更新uniform参数
-        float timeValue = glfwGetTime(); // 获取运行的秒数
-        float greenValue = (std::sin(timeValue) / 2.0f) + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor"); // 在目标程序中查询uniform ourColor的位置值
+        // // 5.2.3. 更新uniform参数
+        // float timeValue = glfwGetTime(); // 获取运行的秒数
+        // float greenValue = (std::sin(timeValue) / 2.0f) + 0.5f;
+        // int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor"); // 在目标程序中查询uniform ourColor的位置值
         // 5.2.4. 画图
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); // 根据索引改变当前program中目标uniform值
-        glBindVertexArray(VAO);                                         // 绑定VAO
-        // glDrawArrays(GL_TRIANGLES, 0, 3);     // 打算绘制的OpenGL图元的类型，顶点数组的起始索引，绘制多少个顶点
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 绘制模式，打算绘制顶点的个数，索引类型，指定EBO中的偏移量
-        // glBindVertexArray(0);                                // 解绑VAO
+        // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); // 根据索引改变当前program中目标uniform值
+        glBindVertexArray(VAO);                              // 绑定VAO
+        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0); // 绘制模式，打算绘制顶点的个数，索引类型，指定EBO中的偏移量
 
         // 5.3. 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // window对象交换颜色缓冲（它是一个储存着GLFW窗口每一个像素颜色值的大缓冲），在这一迭代中被用来绘制，并且将作为输出显示在屏幕上
