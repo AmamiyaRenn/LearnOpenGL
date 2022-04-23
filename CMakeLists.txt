@@ -1,0 +1,37 @@
+cmake_minimum_required(VERSION 3.10)
+
+set(PROJECT_NAME_STR learnGl1)
+project(${PROJECT_NAME_STR} VERSION 1.0.0 LANGUAGES C CXX)
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 17)
+
+if (CMAKE_HOST_WIN32)
+    set(WINDOWS 1)
+elseif(CMAKE_HOST_APPLE)
+    set(MACOS 1)
+elseif(CMAKE_HOST_UNIX)
+    set(LINUX 1)
+endif()
+ 
+message("-- CMAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}") # 输出从cmake运行传过来的buildType参数是什么，如Debug和Release等
+message("-- CAMKE_BUILD_GENERATOR : ${CAMKE_BUILD_GENERATOR}") # 输出从cmake运行传过来的buildGenerator参数是什么，如x86和x64等，这个参数是自定义的，如果不传默认编译64位(我当前系统64位)
+
+find_package(glfw3)
+include_directories("/home/ren/Require/glad/include")
+
+file(GLOB project_file glad.c main.cpp) # 需要把glad.c也包含进来
+add_executable(${PROJECT_NAME} ${project_file})
+
+target_link_libraries(${PROJECT_NAME}
+    -lglfw3
+    -lGL
+    -lm
+    -lXrandr
+    -lXi
+    -lX11
+    -lpthread
+    -ldl
+    -lXinerama
+    -lXcursor
+    )
