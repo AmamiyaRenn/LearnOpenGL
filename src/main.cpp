@@ -7,7 +7,11 @@
  */
 // User Headers
 #include "shader.hpp"
+
+// third party headers
 #include "stb_image.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 float visibility = 0.2f;
 
@@ -48,11 +52,11 @@ int main()
     // 4. set up vertex data (and buffer(s)) and configure vertex attributes
     // 4.1. set up verteices, indices, and texCoords
     float vertices[] = {
-        //---- 位置 ----    ---- 颜色 ----   - 纹理坐标 -
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // 右上
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // 右下
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // 左下
-        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f   // 左上
+        // positions          // texture coords
+        0.5f, 0.5f, 0.0f, 1.0f, 1.0f,   // top right
+        0.5f, -0.5f, 0.0f, 1.0f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
+        -0.5f, 0.5f, 0.0f, 0.0f, 1.0f   // top left
     };
     unsigned int indices[] = {
         // 注意索引从0开始!
@@ -76,14 +80,14 @@ int main()
     // 4.5. set vertice attributes
     // 4.5.1. set position attributes
     // 顶点属性(location)，顶点属性的数据大小，数据的类型，是否希望数据被标准化(Normalize)，步长(从这个属性第二次出现的地方到整个数组0位置之间有多少字节)，位置数据在缓冲中起始位置的偏移量(Offset)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0); // 以顶点属性位置值作为参数，启用顶点属性
     // 4.5.2. set color attributes
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float))); // location=1, offset=3*sizeof(float)
-    glEnableVertexAttribArray(1);                                                                    // 启用1号(location=1)属性
+    // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float))); // location=1, offset=3*sizeof(float)
+    // glEnableVertexAttribArray(1);                                                                    // 启用1号(location=1)属性
     // 4.5.3 set texCoords attributes
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
     // 4.6 解绑不用的对象
     glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑EBO（由于glVertexAttribPointer()函数已经把VBO登记好了）
     glBindVertexArray(0);             // 解绑VAO（需要用到VAO时再绑定）（在需要VAO时请不要解绑EBO）
@@ -154,6 +158,11 @@ int main()
         shaderProgram.use();
         shaderProgram.setFloat("visibility", visibility);
 
+        glm::mat4 trans(1.f);
+        trans = glm::translate(trans, glm::vec3(0.0f, -0.5f, 0.f));
+        trans = glm::rotate(trans, (float)glfwGetTime() / 10, glm::vec3(0.f, 0.f, 1.f));
+        shaderProgram.setMat4("transform", trans);
+
         // 6.2.3. 绑定纹理坐标
         // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); // 根据索引改变当前program中目标uniform值
         glActiveTexture(GL_TEXTURE0);           // 在绑定纹理之前先激活纹理单元
@@ -165,6 +174,12 @@ int main()
         // shaderProgram.use();
         glBindVertexArray(VAO);                              // 绑定VAO
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 绘制模式，打算绘制顶点的个数，索引类型，指定EBO中的偏移量
+
+        trans = glm::mat4(1.f);
+        trans = glm::translate(trans, glm::vec3(0.5f, 0.f, 0.f));
+        trans = glm::scale(trans, glm::vec3(glm::sin((float)glfwGetTime()), glm::sin((float)glfwGetTime()), glm::sin((float)glfwGetTime())));
+        shaderProgram.setMat4("transform", trans);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // 6.3. 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // window对象交换颜色缓冲（它是一个储存着GLFW窗口每一个像素颜色值的大缓冲），在这一迭代中被用来绘制，并且将作为输出显示在屏幕上

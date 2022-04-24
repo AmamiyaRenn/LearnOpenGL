@@ -15,13 +15,10 @@
 ## Result
 
 ![result1](/result/result1.png)
-![result2](/result/result2.png)
-![result3](/result/result3.png)
 
 ## Features
 
-1. 调整了代码结构
-2. 添加了着色器类(in shader.hpp)
+1. 完成了入门-变换
 
 ## Usage
 
