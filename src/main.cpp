@@ -7,6 +7,7 @@
  */
 // User Headers
 #include "shader.hpp"
+#include "camera.hpp"
 
 // third party headers
 #include "stb_image.h"
@@ -24,6 +25,7 @@ glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);    // 摄像机位置
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // 摄像机坐标系下的朝向
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);     // 摄像机上方向
 float pitch, yaw = 90;
+Camera camera(cameraPos);
 
 bool firstMouse = true; // 是否是第一次获取鼠标输入
 double lastX, lastY;
@@ -200,7 +202,7 @@ int main()
     shaderProgram.use();                 // 不要忘记在设置uniform变量之前激活着色器程序！
     shaderProgram.setInt("texture1", 0); // 设置uniform texture1为第0纹理单元
     shaderProgram.setInt("texture2", 1);
-
+    // 5.6.
     glEnable(GL_DEPTH_TEST); // 启动深度测试
 
     // 6. 渲染循环(RenderLoop)
@@ -231,9 +233,9 @@ int main()
 
         // 6.2.5.  MVP transform
         glm::mat4 view(1.f);
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        view = camera.GetViewMatrix();
         glm::mat4 projection(1.f);
-        projection = glm::perspective(glm::radians(fov), float(screen_width) / float(screen_height), 0.1f, 100.f);
+        projection = glm::perspective(glm::radians(camera.Zoom), float(screen_width) / float(screen_height), 0.1f, 100.f);
         shaderProgram.setMat4("view", view);
         shaderProgram.setMat4("projection", projection);
 
@@ -287,13 +289,13 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);            // 把WindowShouldClose属性设置为true，从而关闭GLFW
     float cameraSpeed = 2.5f * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 /***
@@ -312,27 +314,11 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = ypos - lastY;
+    float yoffset = lastY - ypos;
     lastX = xpos;
     lastY = ypos;
 
-    float sensitivity = 0.05;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch -= yoffset;
-
-    if (pitch > 89.f) // 限制pitch
-        pitch = 89.f;
-    else if (pitch < -89.f)
-        pitch = -89.f;
-
-    glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(front);
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 /***
@@ -343,9 +329,5 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
  */
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    fov -= yoffset;
-    if (fov <= 1.0f)
-        fov = 1.0f;
-    if (fov >= 90.0f)
-        fov = 90.0f;
+    camera.ProcessMouseScroll(yoffset);
 }
