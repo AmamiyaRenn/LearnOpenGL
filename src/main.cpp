@@ -9,6 +9,8 @@
 #include "shader.hpp"
 #include "stb_image.h"
 
+float visibility = 0.2f;
+
 // 在创建窗口之后，渲染循环初始化之前注册这些回调函数
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
@@ -87,16 +89,10 @@ int main()
     glBindVertexArray(0);             // 解绑VAO（需要用到VAO时再绑定）（在需要VAO时请不要解绑EBO）
 
     // 5. process textures
-    // 5.1. 指定纹理坐标
-    float texCoords[] = {
-        0.0f, 0.0f, // 左下角
-        1.0f, 0.0f, // 右下角
-        0.5f, 1.0f  // 上中
-    };
     // 5.1. 生成并绑定纹理对象
-    unsigned int texture;                  // 创建纹理对象
-    glGenTextures(1, &texture);            // 输入生成纹理的数量，然后把它们储存在第二个参数的unsigned int数组中
-    glBindTexture(GL_TEXTURE_2D, texture); // 绑定这个纹理对象，让之后任何的纹理指令都可以配置当前绑定的纹理
+    unsigned int texture1;                  // 创建纹理对象
+    glGenTextures(1, &texture1);            // 输入生成纹理的数量，然后把它们储存在第二个参数的unsigned int数组中
+    glBindTexture(GL_TEXTURE_2D, texture1); // 绑定这个纹理对象，让之后任何的纹理指令都可以配置当前绑定的纹理
     // 5.2. 为当前绑定的纹理对象设置环绕、过滤方式
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);     // S轴环绕设置为重复
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);     // T轴环绕设置为重复
@@ -104,6 +100,7 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 放大时用线性插值过滤
     // 5.3. 加载并生成纹理
     int img_width, img_height, nrChannels;                                                                  // 宽度、高度和颜色通道的个数
+    stbi_set_flip_vertically_on_load(true);                                                                 // 设置加载图像时翻转y轴（OpenGL要求y轴0.0坐标是在图片的底部的，但是图片的y轴0.0坐标通常在顶部）
     unsigned char *data = stbi_load("../resourses/container.jpg", &img_width, &img_height, &nrChannels, 0); // 加载图片，并填充宽、高、通道数
     if (data)
     {
@@ -115,6 +112,32 @@ int main()
         std::cout << "Failed to load texture" << std::endl;
     // 5.4. 释放图像内存
     stbi_image_free(data); // 生成了纹理和相应的多级渐远纹理后，释放图像的内存
+    // Repeated
+    // 5.1. 生成并绑定纹理对象
+    unsigned int texture2;                  // 创建纹理对象
+    glGenTextures(1, &texture2);            // 输入生成纹理的数量，然后把它们储存在第二个参数的unsigned int数组中
+    glBindTexture(GL_TEXTURE_2D, texture2); // 绑定这个纹理对象，让之后任何的纹理指令都可以配置当前绑定的纹理
+    // 5.2. 为当前绑定的纹理对象设置环绕、过滤方式
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);     // S轴环绕设置为重复
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);     // T轴环绕设置为重复
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // 缩小时用线性插值过滤
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 放大时用线性插值过滤
+    // 5.3. 加载并生成纹理                                                                    // 宽度、高度和颜色通道的个数
+    data = stbi_load("../resourses/awesomeface.png", &img_width, &img_height, &nrChannels, 0); // 加载图片，并填充宽、高、通道数
+    if (data)
+    {
+        // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_width, img_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data); // 让当前绑定的纹理对象附加上纹理图像
+        glGenerateMipmap(GL_TEXTURE_2D);                                                                    // 自动生成Mipmap
+    }
+    else
+        std::cout << "Failed to load texture" << std::endl;
+    // 5.4. 释放图像内存
+    stbi_image_free(data); // 生成了纹理和相应的多级渐远纹理后，释放图像的内存
+    // 5.5. 设置着色器采样器与纹理单元的归属
+    shaderProgram.use();                 // 不要忘记在设置uniform变量之前激活着色器程序！
+    shaderProgram.setInt("texture1", 0); // 设置uniform texture1为第0纹理单元
+    shaderProgram.setInt("texture2", 1);
 
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
@@ -126,13 +149,20 @@ int main()
         // 6.2.1. 清理屏幕
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // 状态设置函数，设置glClear的填充色
         glClear(GL_COLOR_BUFFER_BIT);         // 状态使用函数，用于清空屏幕的颜色缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
-        // 6.2.2. 激活着色器程序
+
+        // 6.2.2. 激活着色器程序并改变uniform
         shaderProgram.use();
-        // 6.2.3. 更新uniform参数
-        // shaderProgram.setFloat("bias", 0.25f);
-        // 6.2.4. 画图
+        shaderProgram.setFloat("visibility", visibility);
+
+        // 6.2.3. 绑定纹理坐标
         // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); // 根据索引改变当前program中目标uniform值
-        glBindTexture(GL_TEXTURE_2D, texture);               // 绑定纹理
+        glActiveTexture(GL_TEXTURE0);           // 在绑定纹理之前先激活纹理单元
+        glBindTexture(GL_TEXTURE_2D, texture1); // 绑定纹理
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
+        // 6.2.4. 开始绘制
+        // shaderProgram.use();
         glBindVertexArray(VAO);                              // 绑定VAO
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 绘制模式，打算绘制顶点的个数，索引类型，指定EBO中的偏移量
 
@@ -171,4 +201,8 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // 检查用户是否按下了返回键(Esc)（如果没有按下，glfwGetKey将会返回GLFW_RELEASE)
         glfwSetWindowShouldClose(window, true);            // 把WindowShouldClose属性设置为true，从而关闭GLFW
+    else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+        visibility += 0.1;
+    else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        visibility -= 0.1;
 }
