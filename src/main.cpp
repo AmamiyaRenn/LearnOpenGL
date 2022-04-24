@@ -13,6 +13,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+const unsigned int screen_width = 800;
+const unsigned int screen_height = 600;
+
 float visibility = 0.2f;
 
 // 在创建窗口之后，渲染循环初始化之前注册这些回调函数
@@ -29,7 +32,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);                 // GL次版本号(Minor)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 使用核心模式(Core-profile)，只能使用OpenGL功能的一个子集（没有向后兼容特性）
     // 1.2. window creation
-    GLFWwindow *window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL); // 创建一个窗口对象
+    GLFWwindow *window = glfwCreateWindow(screen_width, screen_height, "LearnOpenGL", NULL, NULL); // 创建一个窗口对象
     if (window == NULL)
     { // 创建失败
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -158,11 +161,6 @@ int main()
         shaderProgram.use();
         shaderProgram.setFloat("visibility", visibility);
 
-        glm::mat4 trans(1.f);
-        trans = glm::translate(trans, glm::vec3(0.0f, -0.5f, 0.f));
-        trans = glm::rotate(trans, (float)glfwGetTime() / 10, glm::vec3(0.f, 0.f, 1.f));
-        shaderProgram.setMat4("transform", trans);
-
         // 6.2.3. 绑定纹理坐标
         // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); // 根据索引改变当前program中目标uniform值
         glActiveTexture(GL_TEXTURE0);           // 在绑定纹理之前先激活纹理单元
@@ -170,16 +168,21 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        // 6.2.4. 开始绘制
+        // 6.2.4.  MVP transform
+        glm::mat4 modelTransform(1.f);
+        modelTransform = glm::rotate(modelTransform, glm::radians(-55.f), glm::vec3(1.f, 0.f, 0.f));
+        glm::mat4 viewTransform(1.f);
+        viewTransform = glm::translate(viewTransform, glm::vec3(0.f, 0.f, -3.f));
+        glm::mat4 projectionTransform(1.f);
+        projectionTransform = glm::perspective(glm::radians(45.f), float(screen_width) / float(screen_height), 0.1f, 100.f);
+        shaderProgram.setMat4("model", modelTransform);
+        shaderProgram.setMat4("view", viewTransform);
+        shaderProgram.setMat4("projection", projectionTransform);
+
+        // 6.2.5. 开始绘制
         // shaderProgram.use();
         glBindVertexArray(VAO);                              // 绑定VAO
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 绘制模式，打算绘制顶点的个数，索引类型，指定EBO中的偏移量
-
-        trans = glm::mat4(1.f);
-        trans = glm::translate(trans, glm::vec3(0.5f, 0.f, 0.f));
-        trans = glm::scale(trans, glm::vec3(glm::sin((float)glfwGetTime()), glm::sin((float)glfwGetTime()), glm::sin((float)glfwGetTime())));
-        shaderProgram.setMat4("transform", trans);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // 6.3. 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // window对象交换颜色缓冲（它是一个储存着GLFW窗口每一个像素颜色值的大缓冲），在这一迭代中被用来绘制，并且将作为输出显示在屏幕上
