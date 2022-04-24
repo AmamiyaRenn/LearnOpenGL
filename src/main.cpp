@@ -13,15 +13,27 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-const unsigned int screen_width = 800;
-const unsigned int screen_height = 600;
+const unsigned int screen_width = 1280;
+const unsigned int screen_height = 720;
 
-float visibility = 0.2f;
+float deltaTime = 0.0f; // 当前帧与上一帧的时间差
+float lastFrame = 0.0f; // 上一帧的时间
+
+float fov = 45;
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);    // 摄像机位置
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // 摄像机坐标系下的朝向
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);     // 摄像机上方向
+float pitch, yaw = 90;
+
+bool firstMouse = true; // 是否是第一次获取鼠标输入
+double lastX, lastY;
 
 // 在创建窗口之后，渲染循环初始化之前注册这些回调函数
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
+void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 int main()
 {
@@ -41,6 +53,9 @@ int main()
     }
     glfwMakeContextCurrent(window);                                    // 通知GLFW将窗口的上下文设置为当前线程的主上下文
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // 告诉GLFW每当窗口调整大小的时候调用这个函数；当窗口被第一次显示的时候framebuffer_size_callback也会被调用
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);       // 隐藏光标，并捕捉(Capture)它
+    glfwSetCursorPosCallback(window, mouse_callback);                  // 鼠标控制
+    glfwSetScrollCallback(window, scroll_callback);                    // 鼠标滚轮控制
 
     // 2. glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -170,7 +185,7 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // 缩小时用线性插值过滤
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 放大时用线性插值过滤
     // 5.3. 加载并生成纹理                                                                    // 宽度、高度和颜色通道的个数
-    data = stbi_load("../resourses/awesomeface.png", &img_width, &img_height, &nrChannels, 0); // 加载图片，并填充宽、高、通道数
+    data = stbi_load("../resourses/怪盗团.png", &img_width, &img_height, &nrChannels, 0); // 加载图片，并填充宽、高、通道数
     if (data)
     {
         // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
@@ -191,43 +206,46 @@ int main()
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
     {
-        // 6.1. 输入
-        processInput(window);
+        // 6.1. 输入控制
+        processInput(window); // 键盘控制
 
         // 6.2. 渲染指令
-        // 6.2.1. 清理屏幕
+        // 6.2.1. 获得渲染时间差
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        // 6.2.2. 清理屏幕
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);               // 状态设置函数，设置glClear的填充色
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 状态使用函数，用于清空屏幕的颜色|深度缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
 
-        // 6.2.2. 激活着色器程序并改变uniform
+        // 6.2.3. 激活着色器程序并改变uniform
         shaderProgram.use();
-        shaderProgram.setFloat("visibility", visibility);
 
-        // 6.2.3. 绑定纹理坐标
+        // 6.2.4. 绑定纹理坐标
         // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); // 根据索引改变当前program中目标uniform值
         glActiveTexture(GL_TEXTURE0);           // 在绑定纹理之前先激活纹理单元
         glBindTexture(GL_TEXTURE_2D, texture1); // 绑定纹理
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        // 6.2.4.  MVP transform
+        // 6.2.5.  MVP transform
+        glm::mat4 view(1.f);
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        glm::mat4 projection(1.f);
+        projection = glm::perspective(glm::radians(fov), float(screen_width) / float(screen_height), 0.1f, 100.f);
+        shaderProgram.setMat4("view", view);
+        shaderProgram.setMat4("projection", projection);
 
-        glm::mat4 viewTransform(1.f);
-        viewTransform = glm::translate(viewTransform, glm::vec3(0.f, 0.f, -3.f));
-        glm::mat4 projectionTransform(1.f);
-        projectionTransform = glm::perspective(glm::radians(45.f), float(screen_width) / float(screen_height), 0.1f, 100.f);
-        shaderProgram.setMat4("view", viewTransform);
-        shaderProgram.setMat4("projection", projectionTransform);
-
-        // 6.2.5. 开始绘制
+        // 6.2.6. 开始绘制
         // shaderProgram.use();
         glBindVertexArray(VAO); // 绑定VAO
         for (unsigned int i = 0; i < 10; i++)
         {
-            glm::mat4 modelTransform(1.f);
-            modelTransform = glm::translate(modelTransform, cubePositions[i]);
-            modelTransform = glm::rotate(modelTransform, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(1.0f, 0.3f, 0.5f));
-            shaderProgram.setMat4("model", modelTransform);
+            glm::mat4 model(1.f);
+            model = glm::translate(model, cubePositions[i]);
+            model = glm::rotate(model, glm::radians(20.f * i), glm::vec3(1.0f, 0.3f, 0.5f));
+            shaderProgram.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // 绘制模式，打算绘制顶点的个数，索引类型，指定EBO中的偏移量
@@ -267,8 +285,67 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // 检查用户是否按下了返回键(Esc)（如果没有按下，glfwGetKey将会返回GLFW_RELEASE)
         glfwSetWindowShouldClose(window, true);            // 把WindowShouldClose属性设置为true，从而关闭GLFW
-    else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        visibility += 0.1;
-    else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        visibility -= 0.1;
+    float cameraSpeed = 2.5f * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+}
+
+/***
+ * @: 鼠标控制的回调函数(GLFW的原型复写)
+ * @param {GLFWwindow} *window
+ * @param {double} xpos
+ * @param {double} ypos
+ */
+void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = ypos - lastY;
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.05;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch -= yoffset;
+
+    if (pitch > 89.f) // 限制pitch
+        pitch = 89.f;
+    else if (pitch < -89.f)
+        pitch = -89.f;
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(front);
+}
+
+/***
+ * @: 鼠标滚轮控制的回调函数(GLFW的原型复写)
+ * @param {GLFWwindow} *window
+ * @param {double} xoffset
+ * @param {double} yoffset
+ */
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+    fov -= yoffset;
+    if (fov <= 1.0f)
+        fov = 1.0f;
+    if (fov >= 90.0f)
+        fov = 90.0f;
 }
