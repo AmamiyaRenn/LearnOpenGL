@@ -15,7 +15,7 @@
 #include <iostream>
 #include <cmath>
 
-// System Headers
+// third party headers
 #include <glad/glad.h> // 包含glad来获取所有的必须OpenGL头文件
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
