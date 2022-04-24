@@ -55,16 +55,59 @@ int main()
     // 4. set up vertex data (and buffer(s)) and configure vertex attributes
     // 4.1. set up verteices, indices, and texCoords
     float vertices[] = {
-        // positions          // texture coords
-        0.5f, 0.5f, 0.0f, 1.0f, 1.0f,   // top right
-        0.5f, -0.5f, 0.0f, 1.0f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-        -0.5f, 0.5f, 0.0f, 0.0f, 1.0f   // top left
-    };
-    unsigned int indices[] = {
-        // 注意索引从0开始!
-        0, 1, 3, // 第一个三角形
-        1, 2, 3};
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
+    // world space positions of our cubes
+    glm::vec3 cubePositions[] = {
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(2.0f, 5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f, 3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f, 2.0f, -2.5f),
+        glm::vec3(1.5f, 0.2f, -1.5f),
+        glm::vec3(-1.3f, 1.0f, -1.5f)};
     // 4.2. set VBO
     unsigned int VBO;      // 通过一个缓冲ID(1)生成一个顶点缓冲对象(Vertex Buffer Object)，它会在GPU内存（通常被称为显存）中储存大量顶点
     glGenBuffers(1, &VBO); // 从这一刻起，使用的任何（在GL_ARRAY_BUFFER目标上的）缓冲调用都会用来配置当前绑定的缓冲(VBO)
@@ -76,24 +119,21 @@ int main()
     // 把用户定义的数据复制到当前绑定缓冲的函数；目标缓冲的类型，参数指定传输数据的大小(以字节为单位)，希望发送的实际数据，希望显卡如何管理给定的数据
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     // 4.4. set EBO
-    unsigned int EBO;                                                                // 生成一个索引缓冲对象(Element Buffer Object)
-    glGenBuffers(1, &EBO);                                                           // 生成一个缓冲区对象
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);                                      // 绑定EBO
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // 把索引复制到缓冲里
+    // unsigned int EBO;                                                                // 生成一个索引缓冲对象(Element Buffer Object)
+    // glGenBuffers(1, &EBO);                                                           // 生成一个缓冲区对象
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);                                      // 绑定EBO
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // 把索引复制到缓冲里
     // 4.5. set vertice attributes
     // 4.5.1. set position attributes
     // 顶点属性(location)，顶点属性的数据大小，数据的类型，是否希望数据被标准化(Normalize)，步长(从这个属性第二次出现的地方到整个数组0位置之间有多少字节)，位置数据在缓冲中起始位置的偏移量(Offset)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0); // 以顶点属性位置值作为参数，启用顶点属性
-    // 4.5.2. set color attributes
-    // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float))); // location=1, offset=3*sizeof(float)
-    // glEnableVertexAttribArray(1);                                                                    // 启用1号(location=1)属性
-    // 4.5.3 set texCoords attributes
+    // 4.5.2 set texCoords attributes
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
     // 4.6 解绑不用的对象
-    glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑EBO（由于glVertexAttribPointer()函数已经把VBO登记好了）
-    glBindVertexArray(0);             // 解绑VAO（需要用到VAO时再绑定）（在需要VAO时请不要解绑EBO）
+    // glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑EBO（由于glVertexAttribPointer()函数已经把VBO登记好了）
+    glBindVertexArray(0); // 解绑VAO（需要用到VAO时再绑定）（在需要VAO时请不要解绑EBO）
 
     // 5. process textures
     // 5.1. 生成并绑定纹理对象
@@ -146,6 +186,8 @@ int main()
     shaderProgram.setInt("texture1", 0); // 设置uniform texture1为第0纹理单元
     shaderProgram.setInt("texture2", 1);
 
+    glEnable(GL_DEPTH_TEST); // 启动深度测试
+
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
     {
@@ -154,8 +196,8 @@ int main()
 
         // 6.2. 渲染指令
         // 6.2.1. 清理屏幕
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // 状态设置函数，设置glClear的填充色
-        glClear(GL_COLOR_BUFFER_BIT);         // 状态使用函数，用于清空屏幕的颜色缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);               // 状态设置函数，设置glClear的填充色
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 状态使用函数，用于清空屏幕的颜色|深度缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
 
         // 6.2.2. 激活着色器程序并改变uniform
         shaderProgram.use();
@@ -169,20 +211,26 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texture2);
 
         // 6.2.4.  MVP transform
-        glm::mat4 modelTransform(1.f);
-        modelTransform = glm::rotate(modelTransform, glm::radians(-55.f), glm::vec3(1.f, 0.f, 0.f));
+
         glm::mat4 viewTransform(1.f);
         viewTransform = glm::translate(viewTransform, glm::vec3(0.f, 0.f, -3.f));
         glm::mat4 projectionTransform(1.f);
         projectionTransform = glm::perspective(glm::radians(45.f), float(screen_width) / float(screen_height), 0.1f, 100.f);
-        shaderProgram.setMat4("model", modelTransform);
         shaderProgram.setMat4("view", viewTransform);
         shaderProgram.setMat4("projection", projectionTransform);
 
         // 6.2.5. 开始绘制
         // shaderProgram.use();
-        glBindVertexArray(VAO);                              // 绑定VAO
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // 绘制模式，打算绘制顶点的个数，索引类型，指定EBO中的偏移量
+        glBindVertexArray(VAO); // 绑定VAO
+        for (unsigned int i = 0; i < 10; i++)
+        {
+            glm::mat4 modelTransform(1.f);
+            modelTransform = glm::translate(modelTransform, cubePositions[i]);
+            modelTransform = glm::rotate(modelTransform, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+            shaderProgram.setMat4("model", modelTransform);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+        // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // 绘制模式，打算绘制顶点的个数，索引类型，指定EBO中的偏移量
 
         // 6.3. 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // window对象交换颜色缓冲（它是一个储存着GLFW窗口每一个像素颜色值的大缓冲），在这一迭代中被用来绘制，并且将作为输出显示在屏幕上
@@ -190,7 +238,7 @@ int main()
     }
 
     // 7. 回收资源
-    glDeleteBuffers(1, &EBO);
+    // glDeleteBuffers(1, &EBO);
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     // glDeleteProgram(shaderProgram);
