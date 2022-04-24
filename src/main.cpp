@@ -21,11 +21,10 @@ float deltaTime = 0.0f; // 当前帧与上一帧的时间差
 float lastFrame = 0.0f; // 上一帧的时间
 
 float fov = 45;
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);    // 摄像机位置
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // 摄像机坐标系下的朝向
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);     // 摄像机上方向
-float pitch, yaw = 90;
-Camera camera(cameraPos);
+float pitch, yaw = -90;
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f); // 摄像机位置
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);  // 摄像机上方向
+Camera camera(cameraPos, cameraUp, yaw, pitch);    // 创建摄像头类
 
 bool firstMouse = true; // 是否是第一次获取鼠标输入
 double lastX, lastY;
