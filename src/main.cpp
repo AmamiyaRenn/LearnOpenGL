@@ -55,8 +55,9 @@ int main()
     glfwMakeContextCurrent(window);                                    // 通知GLFW将窗口的上下文设置为当前线程的主上下文
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // 告诉GLFW每当窗口调整大小的时候调用这个函数；当窗口被第一次显示的时候framebuffer_size_callback也会被调用
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);       // 隐藏光标，并捕捉(Capture)它
-    glfwSetCursorPosCallback(window, mouse_callback);                  // 鼠标控制
-    glfwSetScrollCallback(window, scroll_callback);                    // 鼠标滚轮控制
+    // 1.3. set control
+    glfwSetCursorPosCallback(window, mouse_callback); // 鼠标控制
+    glfwSetScrollCallback(window, scroll_callback);   // 鼠标滚轮控制
 
     // 2. glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
