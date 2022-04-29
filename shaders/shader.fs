@@ -8,7 +8,7 @@ out vec4 FragColor;
 
 struct Material {
     sampler2D diffuse;
-    vec3 specular;
+    sampler2D specular;
     float shininess;
 };
 
@@ -35,7 +35,7 @@ void main() {
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 halfwayDir = normalize(viewDir + lightDir);
     float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
-    vec3 specular = spec * material.specular * light.specular;
+    vec3 specular = spec * vec3(texture(material.specular, TexCoords)) * light.specular;
     // Phong Shading
     vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0);

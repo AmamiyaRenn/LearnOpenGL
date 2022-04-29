@@ -16,9 +16,11 @@
 
 // 在创建窗口之后，渲染循环初始化之前注册这些回调函数
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+
+void processInput(GLFWwindow *window);
+unsigned int loadTexture(char const *path);
 
 // settings
 const unsigned int screen_width = 1280;
@@ -66,6 +68,8 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
+    glEnable(GL_DEPTH_TEST); // 启动深度测试
 
     // 3. build and compile shader program
     Shader objectShader("../shaders/shader.vs", "../shaders/shader.fs");
@@ -132,9 +136,9 @@ int main()
     glBindVertexArray(VAO); // 绑定后才能设置对应的顶点属性
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     unsigned int lightVAO;
@@ -149,40 +153,18 @@ int main()
     glEnableVertexAttribArray(0);
 
     // 5. process textures
-    // 5.1. 生成并绑定纹理对象
-    unsigned int texture1;                  // 创建纹理对象
-    glGenTextures(1, &texture1);            // 输入生成纹理的数量，然后把它们储存在第二个参数的unsigned int数组中
-    glBindTexture(GL_TEXTURE_2D, texture1); // 绑定这个纹理对象，让之后任何的纹理指令都可以配置当前绑定的纹理
-    // 5.2. 为当前绑定的纹理对象设置环绕、过滤方式
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);     // S轴环绕设置为重复
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);     // T轴环绕设置为重复
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // 缩小时用线性插值过滤
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 放大时用线性插值过滤
-    // 5.3. 加载并生成纹理
-    int img_width, img_height, nrChannels;                                                                   // 宽度、高度和颜色通道的个数
-    stbi_set_flip_vertically_on_load(true);                                                                  // 设置加载图像时翻转y轴（OpenGL要求y轴0.0坐标是在图片的底部的，但是图片的y轴0.0坐标通常在顶部）
-    unsigned char *data = stbi_load("../resourses/container2.png", &img_width, &img_height, &nrChannels, 0); // 加载图片，并填充宽、高、通道数
-    if (data)
-    {
-        //纹理目标; 多级渐远纹理的级别; 纹理储存格式; 最终纹理的宽高; 总是被设为0（历史遗留的问题）; 源图的格式和数据类型(目前设置为char(byte)数组); 图像数据
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data); // 让当前绑定的纹理对象附加上纹理图像
-        glGenerateMipmap(GL_TEXTURE_2D);                                                                  // 自动生成Mipmap
-    }
-    else
-        std::cout << "Failed to load texture" << std::endl;
-    // 5.4. 释放图像内存
-    stbi_image_free(data); // 生成了纹理和相应的多级渐远纹理后，释放图像的内存
+    unsigned int diffuseMap = loadTexture("../resourses/container2.png");
+    unsigned int specularMap = loadTexture("../resourses/container2_specular.png");
 
     objectShader.use();
-    objectShader.setInt("material.diffuse", 0); // 将要用的纹理单元赋值到material.diffuse这个uniform采样器
-    objectShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-    objectShader.setFloat("material.shininess", 32.0f);
     objectShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
     objectShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // 将光照调暗了一些以搭配场景
     objectShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
     objectShader.setVec3("light.position", 1.2f, 1.0f, 2.0f);
-
-    glEnable(GL_DEPTH_TEST); // 启动深度测试
+    objectShader.setInt("material.diffuse", 0); // 将要用的纹理单元赋值到material.diffuse这个uniform采样器
+    objectShader.setInt("material.specular", 1);
+    objectShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+    objectShader.setFloat("material.shininess", 64.0f);
 
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
@@ -226,6 +208,8 @@ int main()
         // 绑定箱子的纹理到这个纹理单元
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
         objectShader.setVec3("viewPos", camera.Position);
         model = glm::mat4(1.0f);
         objectShader.setMat4("model", model);
@@ -310,4 +294,48 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
+}
+
+/***
+ * @: 从一个文件加载2D纹理
+ * @param {char const*} 纹理贴图文件路径
+ * @return {unsigned int} textureID
+ */
+unsigned int loadTexture(const char *path)
+{
+    // 1. 生成并绑定纹理对象
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    // 2. 加载并生成纹理
+    int width, height, nrChannels;                                          // 宽度、高度和颜色通道的个数
+    stbi_set_flip_vertically_on_load(true);                                 // 设置加载图像时翻转y轴（OpenGL要求y轴0.0坐标是在图片的底部的，但是图片的y轴0.0坐标通常在顶部）
+    unsigned char *data = stbi_load(path, &width, &height, &nrChannels, 0); // 加载图片，并填充宽、高、通道数
+    if (data)
+    {
+        GLenum format;
+        if (nrChannels == 1)
+            format = GL_RED;
+        else if (nrChannels == 3)
+            format = GL_RGB;
+        else if (nrChannels == 4)
+            format = GL_RGBA;
+
+        //纹理目标; 多级渐远纹理的级别; 纹理储存格式; 最终纹理的宽高; 总是被设为0（历史遗留的问题）; 源图的格式和数据类型(目前设置为char(byte)数组); 图像数据
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data); // 让当前绑定的纹理对象附加上纹理图像
+
+        // 为当前绑定的纹理对象进行设置
+        glGenerateMipmap(GL_TEXTURE_2D);                                  // 自动生成Mipmap
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);     // S轴环绕设置为重复
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);     // T轴环绕设置为重复
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // 缩小时用线性插值过滤
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 放大时用线性插值过滤
+    }
+    else
+        std::cout << "Failed to load texture" << std::endl;
+    // 3. 释放图像内存
+    stbi_image_free(data); // 生成了纹理和相应的多级渐远纹理后，释放图像的内存
+
+    return textureID;
 }
