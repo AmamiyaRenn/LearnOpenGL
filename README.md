@@ -14,11 +14,9 @@
 
 ## Result
 
-![result1](/result/result1.gif)
-
 ## Features
 
-1. 加入摄像头类
+1. Phong Shading
 
 ## Usage
 

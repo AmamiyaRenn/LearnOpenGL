@@ -14,27 +14,31 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// 在创建窗口之后，渲染循环初始化之前注册这些回调函数
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+void processInput(GLFWwindow *window);
+void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+
+// settings
 const unsigned int screen_width = 1280;
 const unsigned int screen_height = 720;
 
+// timing
 float deltaTime = 0.0f; // 当前帧与上一帧的时间差
 float lastFrame = 0.0f; // 上一帧的时间
 
+// camera
 float fov = 45;
 float pitch, yaw = -90;
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f); // 摄像机位置
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);  // 摄像机上方向
 Camera camera(cameraPos, cameraUp, yaw, pitch);    // 创建摄像头类
-
-bool firstMouse = true; // 是否是第一次获取鼠标输入
+bool firstMouse = true;                            // 是否是第一次获取鼠标输入
 double lastX, lastY;
 
-// 在创建窗口之后，渲染循环初始化之前注册这些回调函数
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window);
-void mouse_callback(GLFWwindow *window, double xpos, double ypos);
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+// lighting
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 int main()
 {
@@ -67,126 +71,53 @@ int main()
     }
 
     // 3. build and compile shader program
-    Shader shaderProgram("../shaders/shader.vs", "../shaders/shader.fs");
-    Shader lightShader("../shaders/shader.vs", "../shaders/lightShader.fs");
+    Shader objectShader("../shaders/shader.vs", "../shaders/shader.fs");
+    Shader lightShader("../shaders/lightShader.vs", "../shaders/lightShader.fs");
 
     // 4. set up vertex data (and buffer(s)) and configure vertex attributes
     // 4.1. set up verteices, indices, and texCoords
     float vertices[] = {
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 
-        -0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        0.5f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
 
-        -0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
 
-        0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
 
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
 
-        -0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-    };
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f};
 
     // 4.2. set VBO
     unsigned int VBO;      // 通过一个缓冲ID(1)生成一个顶点缓冲对象(Vertex Buffer Object)，它会在GPU内存（通常被称为显存）中储存大量顶点
@@ -201,8 +132,10 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glBindVertexArray(VAO); // 绑定后才能设置对应的顶点属性
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
 
     unsigned int lightVAO;
     glGenVertexArrays(1, &lightVAO);
@@ -212,12 +145,13 @@ int main()
 
     // 设置灯立方体的顶点属性（对我们的灯来说仅仅只有位置数据）
     glBindVertexArray(lightVAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    shaderProgram.use();
-    shaderProgram.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-    shaderProgram.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+    objectShader.use();
+    objectShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+    objectShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+    objectShader.setVec3("lightPos", lightPos);
 
     glEnable(GL_DEPTH_TEST); // 启动深度测试
 
@@ -238,7 +172,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 状态使用函数，用于清空屏幕的颜色|深度缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
 
         // 6.2.3. 激活着色器程序并改变uniform
-        shaderProgram.use();
+        objectShader.use();
 
         // 6.2.5.  MVP transform
         glm::vec3 lightPos(1.2f, 1.0f, 2.0f); // 设置光源位置（世界坐标系）
@@ -259,13 +193,12 @@ int main()
         glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        shaderProgram.use();
+        objectShader.use();
+        objectShader.setVec3("viewPos", camera.Position);
         model = glm::mat4(1.0f);
-        shaderProgram.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-        shaderProgram.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-        shaderProgram.setMat4("model", model);
-        shaderProgram.setMat4("view", view);
-        shaderProgram.setMat4("projection", projection);
+        objectShader.setMat4("model", model);
+        objectShader.setMat4("view", view);
+        objectShader.setMat4("projection", projection);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -278,7 +211,7 @@ int main()
     // glDeleteBuffers(1, &EBO);
     // glDeleteVertexArrays(1, &VAO);
     // glDeleteBuffers(1, &VBO);
-    // glDeleteProgram(shaderProgram);
+    // glDeleteProgram(objectShader);
     glfwTerminate(); // 释放/删除之前的分配的所有资源
 
     return 0;
