@@ -37,9 +37,6 @@ Camera camera(cameraPos, cameraUp, yaw, pitch);    // 创建摄像头类
 bool firstMouse = true;                            // 是否是第一次获取鼠标输入
 double lastX, lastY;
 
-// lighting
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-
 int main()
 {
     // 1. glfwSetting
@@ -149,9 +146,14 @@ int main()
     glEnableVertexAttribArray(0);
 
     objectShader.use();
-    objectShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-    objectShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-    objectShader.setVec3("lightPos", lightPos);
+    objectShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+    objectShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+    objectShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+    objectShader.setFloat("material.shininess", 32.0f);
+    objectShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+    objectShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // 将光照调暗了一些以搭配场景
+    objectShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+    objectShader.setVec3("light.position", 1.2f, 1.0f, 2.0f);
 
     glEnable(GL_DEPTH_TEST); // 启动深度测试
 
