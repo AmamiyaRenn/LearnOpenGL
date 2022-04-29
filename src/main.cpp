@@ -121,6 +121,18 @@ int main()
         -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
         -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
 
+    glm::vec3 cubePositions[] = {
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(2.0f, 5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f, 3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f, 2.0f, -2.5f),
+        glm::vec3(1.5f, 0.2f, -1.5f),
+        glm::vec3(-1.3f, 1.0f, -1.5f)};
+
     // 4.2. set VBO
     unsigned int VBO;      // 通过一个缓冲ID(1)生成一个顶点缓冲对象(Vertex Buffer Object)，它会在GPU内存（通常被称为显存）中储存大量顶点
     glGenBuffers(1, &VBO); // 从这一刻起，使用的任何（在GL_ARRAY_BUFFER目标上的）缓冲调用都会用来配置当前绑定的缓冲(VBO)
@@ -157,14 +169,21 @@ int main()
     unsigned int specularMap = loadTexture("../resourses/container2_specular.png");
 
     objectShader.use();
-    objectShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-    objectShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // 将光照调暗了一些以搭配场景
+    // light settings
+    objectShader.setVec3("light.ambient", 0.1f, 0.1f, 0.1f);
+    objectShader.setVec3("light.diffuse", 0.8f, 0.8f, 0.8f); // 将光照调暗了一些以搭配场景
     objectShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-    objectShader.setVec3("light.position", 1.2f, 1.0f, 2.0f);
+    // objectShader.setVec3("light.position", 1.2f, 1.0f, 2.0f);
+    // objectShader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+    objectShader.setFloat("light.cutoff", glm::cos(glm::radians(12.5f)));
+    objectShader.setFloat("light.outerCutoff", glm::cos(glm::radians(17.5f)));
+    objectShader.setFloat("light.constant", 1.0f);
+    objectShader.setFloat("light.linear", 0.09f);
+    objectShader.setFloat("light.quadratic", 0.032f);
+    // object settings
     objectShader.setInt("material.diffuse", 0); // 将要用的纹理单元赋值到material.diffuse这个uniform采样器
     objectShader.setInt("material.specular", 1);
-    objectShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-    objectShader.setFloat("material.shininess", 64.0f);
+    objectShader.setFloat("material.shininess", 32.0f);
 
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
@@ -211,12 +230,21 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularMap);
         objectShader.setVec3("viewPos", camera.Position);
-        model = glm::mat4(1.0f);
-        objectShader.setMat4("model", model);
         objectShader.setMat4("view", view);
         objectShader.setMat4("projection", projection);
+        objectShader.setVec3("light.position", camera.Position);
+        objectShader.setVec3("light.direction", camera.Front);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (unsigned int i = 0; i < 10; i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            objectShader.setMat4("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         // 6.3. 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // window对象交换颜色缓冲（它是一个储存着GLFW窗口每一个像素颜色值的大缓冲），在这一迭代中被用来绘制，并且将作为输出显示在屏幕上
