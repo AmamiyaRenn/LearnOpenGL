@@ -173,7 +173,6 @@ int main()
     // 5. process textures
     unsigned int diffuseMap = loadTexture("../resourses/container2.png");
     unsigned int specularMap = loadTexture("../resourses/container2_specular.png");
-    unsigned int meguminMap = loadTexture("../resourses/megumin.jpeg");
 
     objectShader.use();
     // light settings
@@ -225,7 +224,6 @@ int main()
     objectShader.setFloat("spotLight.quadratic", 0.032f);
     objectShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
     objectShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
-    objectShader.setInt("spotLight.megumin", 2);
 
     // object settings
     objectShader.setInt("material.diffuse", 0); // 将要用的纹理单元赋值到material.diffuse这个uniform采样器
@@ -236,8 +234,6 @@ int main()
     glBindTexture(GL_TEXTURE_2D, diffuseMap);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, specularMap);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, meguminMap);
 
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
