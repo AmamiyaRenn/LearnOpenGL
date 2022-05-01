@@ -75,6 +75,7 @@ int main()
     // stbi_set_flip_vertically_on_load(true);
 
     glEnable(GL_DEPTH_TEST); // 启动深度测试
+    // glDepthFunc(GL_LESS);
 
     // 3. build and compile shader program
     Shader shader("../shaders/shader.vs", "../shaders/shader.fs");
@@ -133,6 +134,7 @@ int main()
         5.0f, -0.5f, 5.0f, 2.0f, 0.0f,
         -5.0f, -0.5f, -5.0f, 0.0f, 2.0f,
         5.0f, -0.5f, -5.0f, 2.0f, 2.0f};
+
     // cube VAO
     unsigned int cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
