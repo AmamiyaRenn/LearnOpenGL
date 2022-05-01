@@ -102,6 +102,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
             glm::vec2 textureVec;
             textureVec.x = mesh->mTextureCoords[0][i].x; // Assimp允许一个模型在一个顶点上有最多8个不同的纹理坐标, 但目前只关心第一组
             textureVec.y = mesh->mTextureCoords[0][i].y;
+            vertex.TexCoords = textureVec;
         }
         else
             vertex.TexCoords = glm::vec2(0.0f);

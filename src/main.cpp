@@ -59,8 +59,8 @@ int main()
     }
     glfwMakeContextCurrent(window);                                    // 通知GLFW将窗口的上下文设置为当前线程的主上下文
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // 告诉GLFW每当窗口调整大小的时候调用这个函数；当窗口被第一次显示的时候framebuffer_size_callback也会被调用
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);       // 隐藏光标，并捕捉(Capture)它
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // 隐藏光标，并捕捉(Capture)它
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);       // 隐藏光标，并捕捉(Capture)它
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // 隐藏光标，并捕捉(Capture)它
     // 1.3. set control
     glfwSetCursorPosCallback(window, mouse_callback); // 鼠标控制
     glfwSetScrollCallback(window, scroll_callback);   // 鼠标滚轮控制
@@ -72,26 +72,27 @@ int main()
         return -1;
     }
 
+    // stbi_set_flip_vertically_on_load(true);
+
     glEnable(GL_DEPTH_TEST); // 启动深度测试
 
     // 3. build and compile shader program
     Shader modelShader("../shaders/modelShader.vs", "../shaders/modelShader.fs");
 
     modelShader.use();
-    Model Ganyu("../resources/models/Ganyu/Ganyu.fbx");
-    // Model Ganyu("../resources/models/nanosuit/nanosuit.obj");
+    // Model Ganyu("../resources/models/Ganyu/Ganyu.fbx");
+    Model Ganyu("../resources/models/nanosuit/nanosuit.obj");
 
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
     {
-        // 6.1. 输入控制
-        processInput(window); // 键盘控制
-
-        // 6.2. 渲染指令
         // 6.2.1. 获得渲染时间差
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        // 6.1. 输入控制
+        processInput(window); // 键盘控制
 
         // 6.2.2. 清理屏幕
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);               // 状态设置函数，设置glClear的填充色
@@ -103,9 +104,9 @@ int main()
         view = camera.GetViewMatrix();
         glm::mat4 projection(1.f);
         projection = glm::perspective(glm::radians(camera.Zoom), float(screen_width) / float(screen_height), 0.1f, 100.f);
-        model = glm::rotate(model, glm::radians(90), glm::vec3(0.0f, 0.0f, 0.0f));
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));     // it's a bit too big for our scene, so scale it down
+        model = glm::rotate(model, glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(0.0f, -0.0f, 0.0f)); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));      // it's a bit too big for our scene, so scale it down
 
         // 6.2.6. 开始绘制
         modelShader.use();
