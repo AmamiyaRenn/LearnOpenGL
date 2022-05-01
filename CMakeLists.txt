@@ -18,11 +18,8 @@ message("-- CMAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}") # 输出从cmake运行传�
 
 find_package(glfw3)
 find_package(Boost)
-
-set(CMAKE_MODULE_PATH  "/home/ren/Require/assimp-5.1.4/cmake-modules")
 find_package(assimp)
 
-include_directories("/home/ren/Require/assimp-5.1.4/include")
 include_directories("/home/ren/Require/glad/include")
 include_directories("thirdclass" "inc" "src")
 
@@ -30,17 +27,17 @@ file(GLOB project_file thirdclass/glad.c thirdclass/stb_image.cpp src/main.cpp) 
 add_executable(${PROJECT_NAME} ${project_file}) #这里一定要把构成可执行文件的所有源文件都添加进去，否则就会出错！！！
 
 target_link_libraries(${PROJECT_NAME}
-    -lglfw3
-    -lGL
-    -lGLU
-    # glut
-    -lm
-    -lXrandr
-    -lXi
-    -lX11
-    -lpthread
-    -ldl
-    -lXinerama
-    -lXcursor
+    glfw3
+    GL
+    GLU
+    glut
+    m
+    Xrandr
+    Xi
+    X11
+    pthread
+    dl
+    Xinerama
+    Xcursor
     assimp
     )

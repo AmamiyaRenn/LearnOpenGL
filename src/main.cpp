@@ -59,8 +59,8 @@ int main()
     }
     glfwMakeContextCurrent(window);                                    // 通知GLFW将窗口的上下文设置为当前线程的主上下文
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // 告诉GLFW每当窗口调整大小的时候调用这个函数；当窗口被第一次显示的时候framebuffer_size_callback也会被调用
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);       // 隐藏光标，并捕捉(Capture)它
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);         // 隐藏光标，并捕捉(Capture)它
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);       // 隐藏光标，并捕捉(Capture)它
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // 隐藏光标，并捕捉(Capture)它
     // 1.3. set control
     glfwSetCursorPosCallback(window, mouse_callback); // 鼠标控制
     glfwSetScrollCallback(window, scroll_callback);   // 鼠标滚轮控制
@@ -75,172 +75,11 @@ int main()
     glEnable(GL_DEPTH_TEST); // 启动深度测试
 
     // 3. build and compile shader program
-    Shader objectShader("../shaders/shader.vs", "../shaders/shader.fs");
-    Shader lightShader("../shaders/lightShader.vs", "../shaders/lightShader.fs");
     Shader modelShader("../shaders/modelShader.vs", "../shaders/modelShader.fs");
 
-    // 4. set up vertex data (and buffer(s)) and configure vertex attributes
-    // 4.1. set up verteices, indices, and texCoords
-    float vertices[] = {
-        // positions          // normals           // texture coords
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-
-        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
-
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
-
-    glm::vec3 cubePositions[] = {
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(2.0f, 5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f, 3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f, 2.0f, -2.5f),
-        glm::vec3(1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f)};
-
-    glm::vec3 pointLightPositions[] = {
-        glm::vec3(0.7f, 0.2f, 2.0f),
-        glm::vec3(2.3f, -3.3f, -4.0f),
-        glm::vec3(-4.0f, 2.0f, -12.0f),
-        glm::vec3(0.0f, 0.0f, -3.0f)};
-
-    // 4.2. set VBO
-    unsigned int VBO;      // 通过一个缓冲ID(1)生成一个顶点缓冲对象(Vertex Buffer Object)，它会在GPU内存（通常被称为显存）中储存大量顶点
-    glGenBuffers(1, &VBO); // 从这一刻起，使用的任何（在GL_ARRAY_BUFFER目标上的）缓冲调用都会用来配置当前绑定的缓冲(VBO)
-
-    // 4.3. set VAO
-    unsigned int VAO;
-    glGenVertexArrays(1, &VAO); // 生成一个顶点数组对象(Vertex Array Object)
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); // 把VBO复制到缓冲中供OpenGL使用
-    // 把用户定义的数据复制到当前绑定缓冲的函数；目标缓冲的类型，参数指定传输数据的大小(以字节为单位)，希望发送的实际数据，希望显卡如何管理给定的数据
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindVertexArray(VAO); // 绑定后才能设置对应的顶点属性
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    unsigned int lightVAO;
-    glGenVertexArrays(1, &lightVAO);
-
-    // 只需要绑定VBO不用再次设置VBO的数据，因为箱子的VBO数据中已经包含了正确的立方体顶点数据
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    // 设置灯立方体的顶点属性（对我们的灯来说仅仅只有位置数据）
-    glBindVertexArray(lightVAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0); // 这行代码必须要加
-
-    // 5. process textures
-    unsigned int diffuseMap = loadTexture("../resources/container2.png");
-    unsigned int specularMap = loadTexture("../resources/container2_specular.png");
-
-    objectShader.use();
-    // light settings
-    // Dirlight
-    objectShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-    objectShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-    objectShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-    objectShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
-    // point light 1
-    objectShader.setVec3("pointLights[0].position", pointLightPositions[0]);
-    objectShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
-    objectShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
-    objectShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
-    objectShader.setFloat("pointLights[0].constant", 1.0f);
-    objectShader.setFloat("pointLights[0].linear", 0.09f);
-    objectShader.setFloat("pointLights[0].quadratic", 0.032f);
-    // point light 2
-    objectShader.setVec3("pointLights[1].position", pointLightPositions[1]);
-    objectShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
-    objectShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
-    objectShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
-    objectShader.setFloat("pointLights[1].constant", 1.0f);
-    objectShader.setFloat("pointLights[1].linear", 0.09f);
-    objectShader.setFloat("pointLights[1].quadratic", 0.032f);
-    // point light 3
-    objectShader.setVec3("pointLights[2].position", pointLightPositions[2]);
-    objectShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
-    objectShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
-    objectShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
-    objectShader.setFloat("pointLights[2].constant", 1.0f);
-    objectShader.setFloat("pointLights[2].linear", 0.09f);
-    objectShader.setFloat("pointLights[2].quadratic", 0.032f);
-    // point light 4
-    objectShader.setVec3("pointLights[3].position", pointLightPositions[3]);
-    objectShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
-    objectShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
-    objectShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
-    objectShader.setFloat("pointLights[3].constant", 1.0f);
-    objectShader.setFloat("pointLights[3].linear", 0.09f);
-    objectShader.setFloat("pointLights[3].quadratic", 0.032f);
-    // SpotLight
-    // objectShader.setVec3("spotLight.position", camera.Position);
-    // objectShader.setVec3("spotLight.direction", camera.Front);
-    objectShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-    objectShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-    objectShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
-    objectShader.setFloat("spotLight.constant", 1.0f);
-    objectShader.setFloat("spotLight.linear", 0.09f);
-    objectShader.setFloat("spotLight.quadratic", 0.032f);
-    objectShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-    objectShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
-
-    // object settings
-    objectShader.setInt("material.diffuse", 0); // 将要用的纹理单元赋值到material.diffuse这个uniform采样器
-    objectShader.setInt("material.specular", 1);
-    objectShader.setFloat("material.shininess", 32.0f);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, diffuseMap);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, specularMap);
-
-    // Model Ganyu("../resources/models/Ganyu.fbx");
-    Model Ganyu("../resources/models/nanosuit/nanosuit.obj");
+    modelShader.use();
+    Model Ganyu("../resources/models/Ganyu/Ganyu.fbx");
+    // Model Ganyu("../resources/models/nanosuit/nanosuit.obj");
 
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
@@ -258,56 +97,21 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);               // 状态设置函数，设置glClear的填充色
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 状态使用函数，用于清空屏幕的颜色|深度缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
 
-        // 6.2.3. 激活着色器程序并改变uniform
-        objectShader.use();
-
         // 6.2.5.  MVP transform
         glm::mat4 model(1.0f);
         glm::mat4 view(1.f);
         view = camera.GetViewMatrix();
         glm::mat4 projection(1.f);
         projection = glm::perspective(glm::radians(camera.Zoom), float(screen_width) / float(screen_height), 0.1f, 100.f);
-
-        // 6.2.6. 开始绘制
-        lightShader.use();
-        lightShader.setMat4("view", view);
-        lightShader.setMat4("projection", projection);
-        glBindVertexArray(lightVAO);
-        for (unsigned int i = 0; i < 4; i++)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, pointLightPositions[i]);
-            model = glm::scale(model, glm::vec3(0.2f)); // 把光源缩小一点
-            lightShader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-
-        objectShader.use();
-        // 绑定箱子的纹理到这个纹理单元
-
-        objectShader.setVec3("viewPos", camera.Position);
-        objectShader.setMat4("view", view);
-        objectShader.setMat4("projection", projection);
-        objectShader.setVec3("spotLight.position", camera.Position);
-        objectShader.setVec3("spotLight.direction", camera.Front);
-        glBindVertexArray(VAO);
-        for (unsigned int i = 0; i < 10; i++)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            objectShader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-
-        // render the loaded model
-        model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(90), glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));     // it's a bit too big for our scene, so scale it down
+
+        // 6.2.6. 开始绘制
+        modelShader.use();
         modelShader.setMat4("model", model);
-        modelShader.setMat4("projection", projection);
         modelShader.setMat4("view", view);
+        modelShader.setMat4("projection", projection);
         Ganyu.Draw(modelShader);
 
         // 6.3. 检查并调用事件，交换缓冲
@@ -316,8 +120,6 @@ int main()
     }
 
     // 7. 回收资源
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
     glfwTerminate(); // 释放/删除之前的分配的所有资源
 
     return 0;
