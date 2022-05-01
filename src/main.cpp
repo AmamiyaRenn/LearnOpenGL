@@ -77,136 +77,96 @@ int main()
     glEnable(GL_DEPTH_TEST); // 启动深度测试
 
     // 3. build and compile shader program
-    Shader lightShader("../shaders/lightShader.vs", "../shaders/lightShader.fs");
-    // Shader modelShader("../shaders/modelShader.vs", "../shaders/modelShader.fs");
-    Shader modelShader("../shaders/modelLightShader.vs", "../shaders/modelLightShader.fs");
+    Shader shader("/shaders/shader.vs", "/shaders/shader.fs");
 
-    float vertices[] = {
-        // positions          // normals           // texture coords
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // ------------------------------------------------------------------
+    float cubeVertices[] = {
+        // positions          // texture Coords
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
 
-        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
 
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
 
-        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
 
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
+    float planeVertices[] = {
+        // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
+        5.0f, -0.5f, 5.0f, 2.0f, 0.0f,
+        -5.0f, -0.5f, 5.0f, 0.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f, 0.0f, 2.0f,
 
-    glm::vec3 pointLightPositions[] = {
-        glm::vec3(0.7f, 0.2f, 2.0f),
-        glm::vec3(2.3f, -3.3f, -4.0f),
-        glm::vec3(-4.0f, 2.0f, -12.0f),
-        glm::vec3(0.0f, 0.0f, -3.0f)};
-
-    unsigned int VBO;                   // 通过一个缓冲ID(1)生成一个顶点缓冲对象(Vertex Buffer Object)，它会在GPU内存（通常被称为显存）中储存大量顶点
-    glGenBuffers(1, &VBO);              // 从这一刻起，使用的任何（在GL_ARRAY_BUFFER目标上的）缓冲调用都会用来配置当前绑定的缓冲(VBO)
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); // 把VBO复制到缓冲中供OpenGL使用
-    // 把用户定义的数据复制到当前绑定缓冲的函数；目标缓冲的类型，参数指定传输数据的大小(以字节为单位)，希望发送的实际数据，希望显卡如何管理给定的数据
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    unsigned int lightVAO;
-    glGenVertexArrays(1, &lightVAO);
-
-    // 只需要绑定VBO不用再次设置VBO的数据，因为箱子的VBO数据中已经包含了正确的立方体顶点数据
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    // 设置灯立方体的顶点属性（对我们的灯来说仅仅只有位置数据）
-    glBindVertexArray(lightVAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+        5.0f, -0.5f, 5.0f, 2.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f, 0.0f, 2.0f,
+        5.0f, -0.5f, -5.0f, 2.0f, 2.0f};
+    // cube VAO
+    unsigned int cubeVAO, cubeVBO;
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &cubeVBO);
+    glBindVertexArray(cubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glBindVertexArray(0);
+    // plane VAO
+    unsigned int planeVAO, planeVBO;
+    glGenVertexArrays(1, &planeVAO);
+    glGenBuffers(1, &planeVBO);
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glBindVertexArray(0);
 
-    modelShader.use();
-    // light settings
-    // Dirlight
-    modelShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-    modelShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-    modelShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-    modelShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
-    // point light 1
-    modelShader.setVec3("pointLights[0].position", pointLightPositions[0]);
-    modelShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
-    modelShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
-    modelShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
-    modelShader.setFloat("pointLights[0].constant", 1.0f);
-    modelShader.setFloat("pointLights[0].linear", 0.09f);
-    modelShader.setFloat("pointLights[0].quadratic", 0.032f);
-    // point light 2
-    modelShader.setVec3("pointLights[1].position", pointLightPositions[1]);
-    modelShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
-    modelShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
-    modelShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
-    modelShader.setFloat("pointLights[1].constant", 1.0f);
-    modelShader.setFloat("pointLights[1].linear", 0.09f);
-    modelShader.setFloat("pointLights[1].quadratic", 0.032f);
-    // point light 3
-    modelShader.setVec3("pointLights[2].position", pointLightPositions[2]);
-    modelShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
-    modelShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
-    modelShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
-    modelShader.setFloat("pointLights[2].constant", 1.0f);
-    modelShader.setFloat("pointLights[2].linear", 0.09f);
-    modelShader.setFloat("pointLights[2].quadratic", 0.032f);
-    // point light 4
-    modelShader.setVec3("pointLights[3].position", pointLightPositions[3]);
-    modelShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
-    modelShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
-    modelShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
-    modelShader.setFloat("pointLights[3].constant", 1.0f);
-    modelShader.setFloat("pointLights[3].linear", 0.09f);
-    modelShader.setFloat("pointLights[3].quadratic", 0.032f);
-    // SpotLight
-    // modelShader.setVec3("spotLight.position", camera.Position);
-    // modelShader.setVec3("spotLight.direction", camera.Front);
-    modelShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-    modelShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-    modelShader.setVec3("spotLight.specular", 2.0f, 2.0f, 2.0f);
-    modelShader.setFloat("spotLight.constant", 1.0f);
-    modelShader.setFloat("spotLight.linear", 0.09f);
-    modelShader.setFloat("spotLight.quadratic", 0.032f);
-    modelShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-    modelShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
-    modelShader.setInt("spotLight.megumin", 2);
+    // load textures
+    // -------------
+    unsigned int cubeTexture = loadTexture("resources/textures/marble.jpg");
+    unsigned int floorTexture = loadTexture("resources/textures/metal.png");
 
-    // object settings
-    modelShader.setFloat("material.shininess", 64.0f);
-
-    modelShader.use();
-    // Model Ganyu("../resources/models/ganyu/ganyu.pmx");// TODO: 1.皮肤没有渲染；2.金属部分需要添加镜面光贴图
-    // Model Ganyu("../resources/models/Hutao/胡桃.pmx");
-    Model Ganyu("../resources/models/nanosuit/nanosuit.obj");
+    // shader configuration
+    // --------------------
+    shader.use();
+    shader.setInt("texture1", 0);
 
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
@@ -223,37 +183,29 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);               // 状态设置函数，设置glClear的填充色
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 状态使用函数，用于清空屏幕的颜色|深度缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
 
-        // 6.2.5.  MVP transform
-        glm::mat4 model(1.0f);
-        glm::mat4 view(1.f);
-        view = camera.GetViewMatrix();
-        glm::mat4 projection(1.f);
-        projection = glm::perspective(glm::radians(camera.Zoom), float(screen_width) / float(screen_height), 0.1f, 100.f);
-
-        lightShader.use();
-        lightShader.setMat4("view", view);
-        lightShader.setMat4("projection", projection);
-        glBindVertexArray(lightVAO);
-        for (unsigned int i = 0; i < 4; i++)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, pointLightPositions[i]);
-            model = glm::scale(model, glm::vec3(0.2f)); // 把光源缩小一点
-            lightShader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-
-        // 6.2.6. 开始绘制
-        modelShader.use();
+        shader.use();
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)screen_width / (float)screen_height, 0.1f, 100.0f);
+        shader.setMat4("view", view);
+        shader.setMat4("projection", projection);
+        // cubes
+        glBindVertexArray(cubeVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        shader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));      // it's a bit too big for our scene, so scale it down
-        modelShader.setMat4("model", model);
-        modelShader.setMat4("view", view);
-        modelShader.setMat4("projection", projection);
-        modelShader.setVec3("spotLight.position", camera.Position);
-        modelShader.setVec3("spotLight.direction", camera.Front);
-        Ganyu.Draw(modelShader);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        shader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        // floor
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+        shader.setMat4("model", glm::mat4(1.0f));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
 
         // 6.3. 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // window对象交换颜色缓冲（它是一个储存着GLFW窗口每一个像素颜色值的大缓冲），在这一迭代中被用来绘制，并且将作为输出显示在屏幕上
