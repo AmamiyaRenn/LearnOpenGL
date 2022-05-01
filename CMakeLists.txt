@@ -15,14 +15,14 @@ elseif(CMAKE_HOST_UNIX)
 endif()
  
 message("-- CMAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}") # 输出从cmake运行传过来的buildType参数是什么，如Debug和Release等
-message("-- CAMKE_BUILD_GENERATOR : ${CAMKE_BUILD_GENERATOR}") # 输出从cmake运行传过来的buildGenerator参数是什么，如x86和x64等，这个参数是自定义的，如果不传默认编译64位(我当前系统64位)
 
 find_package(glfw3)
 find_package(Boost)
 
 set(CMAKE_MODULE_PATH  "/home/ren/Require/assimp-5.1.4/cmake-modules")
-find_package(assimp REQUIRED)
+find_package(assimp)
 
+include_directories("/home/ren/Require/assimp-5.1.4/include")
 include_directories("/home/ren/Require/glad/include")
 include_directories("thirdclass" "inc" "src")
 
@@ -33,7 +33,7 @@ target_link_libraries(${PROJECT_NAME}
     -lglfw3
     -lGL
     -lGLU
-    -lglut
+    # glut
     -lm
     -lXrandr
     -lXi
@@ -42,5 +42,5 @@ target_link_libraries(${PROJECT_NAME}
     -ldl
     -lXinerama
     -lXcursor
-    -lassimp
+    assimp
     )

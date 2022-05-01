@@ -50,6 +50,7 @@ void Model::loadModel(std::string path)
     }
     directory = path.substr(0, path.find_last_of('/'));
 
+    std::cout << "SUCCESS::ASSIMP::PROCESSED:" << path << std::endl;
     processNode(scene->mRootNode, scene);
 }
 
@@ -62,6 +63,7 @@ void Model::processNode(aiNode *node, const aiScene *scene)
         meshes.push_back(processMesh(mesh, scene));
         std::cout << "SUCCESS::ASSIMP::PROCESSED:" << i << std::endl;
     }
+
     // 处理子节点所有的网格
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
         processNode(node->mChildren[i], scene);

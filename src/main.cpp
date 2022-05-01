@@ -60,6 +60,7 @@ int main()
     glfwMakeContextCurrent(window);                                    // 通知GLFW将窗口的上下文设置为当前线程的主上下文
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // 告诉GLFW每当窗口调整大小的时候调用这个函数；当窗口被第一次显示的时候framebuffer_size_callback也会被调用
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);       // 隐藏光标，并捕捉(Capture)它
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);         // 隐藏光标，并捕捉(Capture)它
     // 1.3. set control
     glfwSetCursorPosCallback(window, mouse_callback); // 鼠标控制
     glfwSetScrollCallback(window, scroll_callback);   // 鼠标滚轮控制
@@ -76,7 +77,7 @@ int main()
     // 3. build and compile shader program
     Shader objectShader("../shaders/shader.vs", "../shaders/shader.fs");
     Shader lightShader("../shaders/lightShader.vs", "../shaders/lightShader.fs");
-    Shader modelShader("../shaders/shader.vs", "../shaders/modelShader.fs");
+    Shader modelShader("../shaders/modelShader.vs", "../shaders/modelShader.fs");
 
     // 4. set up vertex data (and buffer(s)) and configure vertex attributes
     // 4.1. set up verteices, indices, and texCoords
@@ -174,8 +175,8 @@ int main()
     glEnableVertexAttribArray(0); // 这行代码必须要加
 
     // 5. process textures
-    unsigned int diffuseMap = loadTexture("../resourses/container2.png");
-    unsigned int specularMap = loadTexture("../resourses/container2_specular.png");
+    unsigned int diffuseMap = loadTexture("../resources/container2.png");
+    unsigned int specularMap = loadTexture("../resources/container2_specular.png");
 
     objectShader.use();
     // light settings
@@ -238,7 +239,8 @@ int main()
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, specularMap);
 
-    Model Ganyu("../resourses/models/Ganyu.fbx");
+    // Model Ganyu("../resources/models/Ganyu.fbx");
+    Model Ganyu("../resources/models/nanosuit/nanosuit.obj");
 
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
@@ -299,6 +301,13 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
+        // render the loaded model
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));     // it's a bit too big for our scene, so scale it down
+        modelShader.setMat4("model", model);
+        modelShader.setMat4("projection", projection);
+        modelShader.setMat4("view", view);
         Ganyu.Draw(modelShader);
 
         // 6.3. 检查并调用事件，交换缓冲
