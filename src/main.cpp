@@ -77,7 +77,7 @@ int main()
     glEnable(GL_DEPTH_TEST); // 启动深度测试
 
     // 3. build and compile shader program
-    Shader shader("/shaders/shader.vs", "/shaders/shader.fs");
+    Shader shader("../shaders/shader.vs", "../shaders/shader.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -160,8 +160,8 @@ int main()
 
     // load textures
     // -------------
-    unsigned int cubeTexture = loadTexture("resources/textures/marble.jpg");
-    unsigned int floorTexture = loadTexture("resources/textures/metal.png");
+    unsigned int cubeTexture = loadTexture("../resources/textures/marble.jpg");
+    unsigned int floorTexture = loadTexture("../resources/textures/metal.png");
 
     // shader configuration
     // --------------------
