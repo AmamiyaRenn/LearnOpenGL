@@ -8,9 +8,11 @@
 // User Headers
 #include "shader.hpp"
 #include "camera.hpp"
+#include "models.hpp"
+
+// standard headers
 
 // third party headers
-#include "stb_image.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -74,6 +76,7 @@ int main()
     // 3. build and compile shader program
     Shader objectShader("../shaders/shader.vs", "../shaders/shader.fs");
     Shader lightShader("../shaders/lightShader.vs", "../shaders/lightShader.fs");
+    Shader modelShader("../shaders/shader.vs", "../shaders/modelShader.fs");
 
     // 4. set up vertex data (and buffer(s)) and configure vertex attributes
     // 4.1. set up verteices, indices, and texCoords
@@ -168,7 +171,6 @@ int main()
     // 设置灯立方体的顶点属性（对我们的灯来说仅仅只有位置数据）
     glBindVertexArray(lightVAO);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
 
     // 5. process textures
     unsigned int diffuseMap = loadTexture("../resourses/container2.png");
@@ -235,6 +237,8 @@ int main()
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, specularMap);
 
+    Model Ganyu("../resourses/models/Ganyu.fbx");
+
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
     {
@@ -291,9 +295,10 @@ int main()
             float angle = 20.0f * i;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             objectShader.setMat4("model", model);
-
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+
+        Ganyu.Draw(modelShader);
 
         // 6.3. 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // window对象交换颜色缓冲（它是一个储存着GLFW窗口每一个像素颜色值的大缓冲），在这一迭代中被用来绘制，并且将作为输出显示在屏幕上

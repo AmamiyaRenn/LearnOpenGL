@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 
-IF(POLICY CMP0012)
-    CMAKE_POLICY(SET CMP0012 NEW)
-ENDIF()
-
 set(PROJECT_NAME_STR learnGl1)
 project(${PROJECT_NAME_STR} LANGUAGES C CXX)
 
@@ -23,7 +19,9 @@ message("-- CAMKE_BUILD_GENERATOR : ${CAMKE_BUILD_GENERATOR}") # 输出从cmake�
 
 find_package(glfw3)
 find_package(Boost)
-find_package(assimp)
+
+set(CMAKE_MODULE_PATH  "/home/ren/Require/assimp-5.1.4/cmake-modules")
+find_package(assimp REQUIRED)
 
 include_directories("/home/ren/Require/glad/include")
 include_directories("thirdclass" "inc" "src")
@@ -44,4 +42,5 @@ target_link_libraries(${PROJECT_NAME}
     -ldl
     -lXinerama
     -lXcursor
+    -lassimp
     )
