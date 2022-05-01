@@ -35,7 +35,7 @@ float lastFrame = 0.0f; // 上一帧的时间
 // camera
 float fov = 45;
 float pitch, yaw = -90;
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f); // 摄像机位置
+glm::vec3 cameraPos = glm::vec3(0.0f, 3.0f, 5.0f); // 摄像机位置
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);  // 摄像机上方向
 Camera camera(cameraPos, cameraUp, yaw, pitch);    // 创建摄像头类
 bool firstMouse = true;                            // 是否是第一次获取鼠标输入
@@ -80,8 +80,9 @@ int main()
     Shader modelShader("../shaders/modelShader.vs", "../shaders/modelShader.fs");
 
     modelShader.use();
-    // Model Ganyu("../resources/models/Ganyu/Ganyu.fbx");
-    Model Ganyu("../resources/models/nanosuit/nanosuit.obj");
+    Model Ganyu("../resources/models/ganyu/ganyu.pmx");
+    // Model Ganyu("../resources/models/Hutao/胡桃.pmx");
+    // Model Ganyu("../resources/models/nanosuit/nanosuit.obj");
 
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
@@ -104,9 +105,8 @@ int main()
         view = camera.GetViewMatrix();
         glm::mat4 projection(1.f);
         projection = glm::perspective(glm::radians(camera.Zoom), float(screen_width) / float(screen_height), 0.1f, 100.f);
-        model = glm::rotate(model, glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::translate(model, glm::vec3(0.0f, -0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));      // it's a bit too big for our scene, so scale it down
+        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));      // it's a bit too big for our scene, so scale it down
 
         // 6.2.6. 开始绘制
         modelShader.use();
