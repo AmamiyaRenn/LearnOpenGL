@@ -171,6 +171,7 @@ int main()
     // 设置灯立方体的顶点属性（对我们的灯来说仅仅只有位置数据）
     glBindVertexArray(lightVAO);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0); // 这行代码必须要加
 
     // 5. process textures
     unsigned int diffuseMap = loadTexture("../resourses/container2.png");
