@@ -75,10 +75,15 @@ int main()
     // stbi_set_flip_vertically_on_load(true);
 
     glEnable(GL_DEPTH_TEST); // 启动深度测试
+    // glDepthMask(GL_FALSE); // 禁用深度缓冲的写入
     // glDepthFunc(GL_LESS);
+
+    glEnable(GL_STENCIL_TEST);                 // 启动模板测试
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); // 如果其中的一个测试失败了，则仅仅保留当前储存在模板缓冲中的值；如果模板测试和深度测试都通过了，则将储存的模板值设置为参考值
 
     // 3. build and compile shader program
     Shader shader("../shaders/shader.vs", "../shaders/shader.fs");
+    Shader shaderSingleColor("../shaders/shader.vs", "../shaders/shaderSingleColor.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -182,8 +187,8 @@ int main()
         processInput(window); // 键盘控制
 
         // 6.2.2. 清理屏幕
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);               // 状态设置函数，设置glClear的填充色
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 状态使用函数，用于清空屏幕的颜色|深度缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);                                       // 状态设置函数，设置glClear的填充色
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // 状态使用函数，用于清空屏幕的颜色|深度缓冲|模板缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
 
         shader.use();
         glm::mat4 model = glm::mat4(1.0f);
@@ -191,7 +196,20 @@ int main()
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)screen_width / (float)screen_height, 0.1f, 100.0f);
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
+
+        // floor
+        // draw floor as normal, but don't write the floor to the stencil buffer, we only care about the containers. We set its mask to 0x00 to not write to the stencil buffer.
+        glStencilMask(0x00);
+        glBindVertexArray(planeVAO);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+        shader.setMat4("model", glm::mat4(1.0f));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
         // cubes
+        glStencilFunc(GL_ALWAYS, 1, 0xFF); // 每当物体的片段被渲染时，将模板缓冲更新为1；所有的片段都应该更新模板缓冲
+        glStencilMask(0xFF);               // 启用写入；每一位写入模板缓冲时都保持原样
+
         glBindVertexArray(cubeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
@@ -202,12 +220,36 @@ int main()
         model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
         shader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-        // floor
-        glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        shader.setMat4("model", glm::mat4(1.0f));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // cubes_outline
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00); // 禁止模板缓冲的写入
+        glDisable(GL_DEPTH_TEST);
+        shaderSingleColor.use();
+        shaderSingleColor.setMat4("view", view);
+        shaderSingleColor.setMat4("projection", projection);
+
+        float scale = 1.1f;
+        glBindVertexArray(cubeVAO);
+        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(scale, scale, scale));
+        shaderSingleColor.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 0, 0xFF);
+        glEnable(GL_DEPTH_TEST);
+
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 0, 0xFF);
+        glEnable(GL_DEPTH_TEST);
 
         // 6.3. 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // window对象交换颜色缓冲（它是一个储存着GLFW窗口每一个像素颜色值的大缓冲），在这一迭代中被用来绘制，并且将作为输出显示在屏幕上
