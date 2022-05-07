@@ -117,7 +117,6 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
             indices.push_back(face.mIndices[j]);
     }
     // 材质
-
     aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
     // 1. diffuse maps
     std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse");
