@@ -46,6 +46,6 @@ void main() {
     vec3 specular = envLight.specular * texture(skybox, R).rgb * texture(material.specular1, TexCoords).rgb;
 
     // FragColor = vec4(ambient + diffuse + specular, 1.0);
-    // FragColor = vec4(ambient + diffuse, 1.0); 
-    FragColor += vec4(specular, 1.0);
+    FragColor = vec4(ambient + diffuse, 1.0); 
+    // FragColor += vec4(specular, 1.0);
 }

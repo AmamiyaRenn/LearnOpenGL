@@ -282,7 +282,8 @@ int main()
         "../resources/skybox/back.jpg"};
     unsigned int cubemapTexture = loadCubemap(faces);
 
-    Model nanosuit("../resources/models/nanosuit_reflection/nanosuit.obj");
+    // Model nanosuit("../resources/models/nanosuit_reflection/nanosuit.obj");
+    Model nanosuit("../resources/models/nanosuit/nanosuit.obj");
     // Model nanosuit("../resources/models/ganyu/ganyu.pmx");
 
     // shader configuration
