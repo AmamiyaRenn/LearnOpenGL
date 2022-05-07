@@ -282,8 +282,8 @@ int main()
         "../resources/skybox/back.jpg"};
     unsigned int cubemapTexture = loadCubemap(faces);
 
-    // Model nanosuit("../resources/models/nanosuit_reflection/nanosuit.obj");
-    Model nanosuit("../resources/models/nanosuit/nanosuit.obj");
+    Model nanosuit("../resources/models/nanosuit_reflection/nanosuit.obj");
+    // Model nanosuit("../resources/models/nanosuit/nanosuit.obj");
     // Model nanosuit("../resources/models/ganyu/ganyu.pmx");
 
     // shader configuration
@@ -300,8 +300,8 @@ int main()
     modelShader.use();
     modelShader.setInt("skybox", 3); // 由于模型加载器本身就已经在着色器中占用了3个纹理单元了，所以需要将天空盒绑定到第4个纹理单元上（要从同一个着色器中对天空盒采样）
     modelShader.setVec3("envLight.ambient", 0.1f, 0.1f, 0.1f);
-    modelShader.setVec3("envLight.diffuse", 0.9f, 0.9f, 0.9f);
-    modelShader.setVec3("envLight.specular", 1.0f, 1.0f, 1.0f);
+    modelShader.setVec3("envLight.diffuse", 1.0f, 1.0f, 1.0f);
+    modelShader.setVec3("envLight.specular", 0.9f, 0.9f, 0.9f);
 
     // draw as wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

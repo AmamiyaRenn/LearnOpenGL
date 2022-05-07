@@ -41,8 +41,8 @@ private:
 void Model::loadModel(std::string path)
 {
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs); // 三角形化|翻转y轴
-
+    // const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs); // 三角形化|翻转y轴
+    const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate); // 如果已经执行了stbi_set_flip_vertically_on_load(true);，则不需要再次翻转y轴
     if (scene == nullptr || !scene->mRootNode || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
     { // 场景为NULL|根节点为NULL|模型数据不完整
         std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
