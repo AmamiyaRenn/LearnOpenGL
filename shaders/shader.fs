@@ -1,22 +1,16 @@
 #version 460 core
 
+in vec3 Normal;
+in vec3 Position;
+
 out vec4 FragColor;
 
-in vec2 TexCoords;
-
-uniform sampler2D texture1;
-
-float near = 0.1;
-float far = 100.0;
-
-float LinearizeDepth(float depth) {
-    float z = depth * 2.0 - 1.0;
-    return (2.0 * near * far) / (far + near - z * (far - near));
-}
+uniform vec3 cameraPos;
+uniform samplerCube skybox;
 
 void main() {
-    vec4 texColor = texture(texture1, TexCoords);
-    if(texColor.a < 0.1)
-        discard;
-    FragColor = texColor;
+    vec3 I = normalize(Position - cameraPos);
+    vec3 R = reflect(I, normalize(Normal));
+    R.y = -R.y;
+    FragColor = vec4(texture(skybox, R).rgb, 1.0);
 }

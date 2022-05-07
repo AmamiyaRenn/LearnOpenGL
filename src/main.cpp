@@ -24,6 +24,7 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 void processInput(GLFWwindow *window);
 unsigned int loadTexture(char const *path);
+unsigned int loadCubemap(std::vector<std::string> faces);
 
 // settings
 const unsigned int SCR_WIDTH = 1280;
@@ -83,53 +84,52 @@ int main()
     // 3. build and compile shader program
     Shader shader("../shaders/shader.vs", "../shaders/shader.fs");
     Shader screenShader("../shaders/screenShader.vs", "../shaders/screenShader.fs");
+    Shader skyboxShader("../shaders/skyboxShader.vs", "../shaders/skyboxShader.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float cubeVertices[] = {
-        // Back face
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // Bottom-left
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,  // bottom-right
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // top-left
-        // Front face
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // bottom-right
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // top-right
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // top-right
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,  // top-left
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
-        // Left face
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // top-right
-        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,  // top-left
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  // bottom-right
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // top-right
-                                         // Right face
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    // top-left
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  // bottom-right
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  // bottom-right
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    // top-left
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f,   // bottom-left
-        // Bottom face
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f,  // top-left
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,   // bottom-left
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,   // bottom-left
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  // bottom-right
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
-        // Top face
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,  // top-right
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f   // bottom-left
-    };
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f};
     float planeVertices[] = {
         // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
         5.0f, -0.5f, 5.0f, 2.0f, 0.0f,
@@ -139,13 +139,7 @@ int main()
         5.0f, -0.5f, 5.0f, 2.0f, 0.0f,
         -5.0f, -0.5f, -5.0f, 0.0f, 2.0f,
         5.0f, -0.5f, -5.0f, 2.0f, 2.0f};
-    std::vector<glm::vec3> vegetation{
-        glm::vec3(-1.5f, 0.0f, -0.48f),
-        glm::vec3(1.5f, 0.0f, 0.51f),
-        glm::vec3(0.0f, 0.0f, 0.7f),
-        glm::vec3(-0.3f, 0.0f, -2.3f),
-        glm::vec3(0.5f, 0.0f, -0.6f)}; // 加入几棵草
-    float quadVertices[] = {           // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+    float quadVertices[] = {// vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
                             // positions   // texCoords
                             -1.0f, 1.0f, 0.0f, 1.0f,
                             -1.0f, -1.0f, 0.0f, 0.0f,
@@ -154,6 +148,49 @@ int main()
                             -1.0f, 1.0f, 0.0f, 1.0f,
                             1.0f, -1.0f, 1.0f, 0.0f,
                             1.0f, 1.0f, 1.0f, 1.0f};
+    float skyboxVertices[] = {
+        // positions
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        -1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f};
     // cube VAO
     unsigned int cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
@@ -162,19 +199,9 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-    glBindVertexArray(0);
-    // grass VAO
-    unsigned int vegetationVAO;
-    glGenVertexArrays(1, &vegetationVAO);
-    glBindVertexArray(vegetationVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
     glBindVertexArray(0);
     // plane VAO
     unsigned int planeVAO, planeVBO;
@@ -199,6 +226,15 @@ int main()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+    // skybox VAO
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
 
     unsigned int framebuffer; // 创建一个帧缓冲
     glGenFramebuffers(1, &framebuffer);
@@ -228,16 +264,33 @@ int main()
 
     // load textures
     // -------------
-    unsigned int cubeTexture = loadTexture("../resources/textures/container.jpg");
+    // unsigned int cubeTexture = loadTexture("../resources/textures/container.jpg");
     unsigned int floorTexture = loadTexture("../resources/textures/metal.png");
+    std::vector<std::string> faces{
+        // 在 opengl 中，传送 2D 纹理数据的时候，data 的起始位置应该是图片的左下角像素（这里的纹理坐标是 0,0），然后逐行向上扫描
+        // 但是：cubemap 却是个例外，据说 cubemap 是沿用了一个叫做 RenderMan 的约定
+        // 即传送 cubemap 的 face 的时候，data 的起始位置应该是图片的左上角像素（然后逐行向下扫描）
+        // 所以在skyboxShader.vs中做了把y轴上下取负的操作
+        // 也就是说，朝天空方向看去，纹理坐标实际上是指着地面方向了
+        // 所以此处bottom和top要对调
+        "../resources/skybox/right.jpg",
+        "../resources/skybox/left.jpg",
+        "../resources/skybox/bottom.jpg",
+        "../resources/skybox/top.jpg",
+        "../resources/skybox/front.jpg",
+        "../resources/skybox/back.jpg"};
+    unsigned int cubemapTexture = loadCubemap(faces);
 
     // shader configuration
     // --------------------
     shader.use();
-    shader.setInt("texture1", 0);
+    shader.setInt("skybox", 0);
 
     screenShader.use();
     screenShader.setInt("screenTexture", 0);
+
+    skyboxShader.use();
+    skyboxShader.setInt("skybox", 0);
 
     // draw as wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -260,18 +313,23 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);               // 状态设置函数，设置glClear的填充色
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 状态使用函数，用于清空屏幕的颜色|深度缓冲|模板缓冲，它接受一个缓冲位(Buffer Bit)来指定要清空的缓冲
 
-        // draw objects
-        shader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
+
+        // draw objects
+        view = camera.GetViewMatrix();
+        shader.use();
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
         // cubes
         glBindVertexArray(cubeVAO);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, cubeTexture);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+        shader.setVec3("cameraPos", camera.Position);
         shader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         model = glm::mat4(1.0f);
@@ -279,11 +337,22 @@ int main()
         shader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         // floor
-        glBindVertexArray(planeVAO);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
-        model = glm::mat4(1.0f);
-        shader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        // glBindVertexArray(planeVAO);
+        // glBindTexture(GL_TEXTURE_2D, floorTexture);
+        // model = glm::mat4(1.0f);
+        // shader.setMat4("model", model);
+        // glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // draw skybox
+        glDepthFunc(GL_LEQUAL); // 由于我们强行把深度写为1.0，这样会导致1.0（skybox）=1.0（默认深度）错误，所以要改为小于等于，让skybox通过深度测试
+        skyboxShader.use();
+        skyboxShader.setMat4("projection", projection);
+        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // 移除变换矩阵的位移部分
+        skyboxShader.setMat4("view", view);
+        glBindVertexArray(skyboxVAO);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDepthFunc(GL_LESS); // set depth function back to default
 
         // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -413,6 +482,49 @@ unsigned int loadTexture(const char *path)
         std::cout << "Failed to load texture" << std::endl;
     // 3. 释放图像内存
     stbi_image_free(data); // 生成了纹理和相应的多级渐远纹理后，释放图像的内存
+
+    return textureID;
+}
+
+/***
+ * @: 加载天空盒
+ * @param {vector<std::string>} faces 包含6个纹理路径的vector
+ * @return {unsigned int} textureID
+ */
+unsigned int loadCubemap(std::vector<std::string> faces)
+{
+    // order:
+    // +X (right)
+    // -X (left)
+    // +Y (top)
+    // -Y (bottom)
+    // +Z (front)
+    // -Z (back)
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                         0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
 }
