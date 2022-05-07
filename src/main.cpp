@@ -281,6 +281,8 @@ int main()
         "../resources/skybox/back.jpg"};
     unsigned int cubemapTexture = loadCubemap(faces);
 
+    Model nanosuit("../resources/models/nanosuit/nanosuit.obj");
+
     // shader configuration
     // --------------------
     shader.use();
@@ -342,6 +344,11 @@ int main()
         // model = glm::mat4(1.0f);
         // shader.setMat4("model", model);
         // glDrawArrays(GL_TRIANGLES, 0, 6);
+        // model
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.25f));
+        shader.setMat4("model", model);
+        nanosuit.Draw(shader);
 
         // draw skybox
         glDepthFunc(GL_LEQUAL); // 由于我们强行把深度写为1.0，这样会导致1.0（skybox）=1.0（默认深度）错误，所以要改为小于等于，让skybox通过深度测试
