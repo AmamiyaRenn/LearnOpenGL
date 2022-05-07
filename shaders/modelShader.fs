@@ -47,6 +47,5 @@ void main() {
 
     // FragColor = vec4(ambient + diffuse + specular, 1.0);
     // FragColor = vec4(ambient + diffuse, 1.0); 
-    // FragColor += vec4(specular, 1.0);
-    FragColor = vec4(texture2D(material.diffuse1, TexCoords).rgb + texture(skybox, R).rgb, 1.0);
+    FragColor += vec4(specular, 1.0);
 }

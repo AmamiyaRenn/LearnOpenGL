@@ -297,11 +297,10 @@ int main()
     skyboxShader.setInt("skybox", 0);
 
     modelShader.use();
-    modelShader.setInt("skybox", 0);
+    modelShader.setInt("skybox", 3); // 由于模型加载器本身就已经在着色器中占用了3个纹理单元了，所以需要将天空盒绑定到第4个纹理单元上（要从同一个着色器中对天空盒采样）
     modelShader.setVec3("envLight.ambient", 0.1f, 0.1f, 0.1f);
     modelShader.setVec3("envLight.diffuse", 0.9f, 0.9f, 0.9f);
-    // modelShader.setVec3("envLight.specular", 1.0f, 1.0f, 1.0f);
-    modelShader.setVec3("envLight.specular", 0.5f, 0.5f, 0.5f);
+    modelShader.setVec3("envLight.specular", 1.0f, 1.0f, 1.0f);
 
     // draw as wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -337,7 +336,7 @@ int main()
         glBindVertexArray(cubeVAO);
         // glActiveTexture(GL_TEXTURE0);
         // glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
         shader.setVec3("cameraPos", camera.Position);
