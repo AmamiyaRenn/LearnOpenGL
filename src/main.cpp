@@ -298,11 +298,9 @@ int main()
 
     modelShader.use();
     modelShader.setInt("skybox", 0);
-
-    // shader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-    // shader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-    // shader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-    // shader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+    modelShader.setVec3("envLight.ambient", 0.05f, 0.05f, 0.05f);
+    modelShader.setVec3("envLight.diffuse", 0.4f, 0.4f, 0.4f);
+    modelShader.setVec3("envLight.specular", 0.5f, 0.5f, 0.5f);
 
     // draw as wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
