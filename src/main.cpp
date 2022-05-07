@@ -76,12 +76,13 @@ int main()
     glEnable(GL_DEPTH_TEST); // 启动深度测试
     glEnable(GL_BLEND);      // 启动透明度混合
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_CULL_FACE); // 启动面剔除
-    // glCullFace(GL_FRONT);
-    glFrontFace(GL_CW); // 将顺时针的面（而不是逆时针的面）定义为正向面
+    // glEnable(GL_CULL_FACE); // 启动面剔除
+    // // glCullFace(GL_FRONT);
+    // glFrontFace(GL_CW); // 将顺时针的面（而不是逆时针的面）定义为正向面
 
     // 3. build and compile shader program
     Shader shader("../shaders/shader.vs", "../shaders/shader.fs");
+    Shader screenShader("../shaders/screenShader.vs", "../shaders/screenShader.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -144,7 +145,15 @@ int main()
         glm::vec3(0.0f, 0.0f, 0.7f),
         glm::vec3(-0.3f, 0.0f, -2.3f),
         glm::vec3(0.5f, 0.0f, -0.6f)}; // 加入几棵草
+    float quadVertices[] = {           // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+                            // positions   // texCoords
+                            -1.0f, 1.0f, 0.0f, 1.0f,
+                            -1.0f, -1.0f, 0.0f, 0.0f,
+                            1.0f, -1.0f, 1.0f, 0.0f,
 
+                            -1.0f, 1.0f, 0.0f, 1.0f,
+                            1.0f, -1.0f, 1.0f, 0.0f,
+                            1.0f, 1.0f, 1.0f, 1.0f};
     // cube VAO
     unsigned int cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
@@ -179,18 +188,59 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glBindVertexArray(0);
+    // screen quad VAO
+    unsigned int quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+
+    unsigned int framebuffer; // 创建一个帧缓冲
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+    unsigned int textureColorbuffer; // 创建一个纹理图像，并将它作为一个颜色附件附加到帧缓冲上
+    glGenTextures(1, &textureColorbuffer);
+    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0); // 将它附加到当前绑定的帧缓冲对象
+
+    unsigned int rbo; // 创建一个渲染缓冲对象
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT); // 深度和模板附件渲染缓冲对象
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // 将渲染缓冲对象附加到帧缓冲的深度和模板附件上
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) // 检查帧缓冲是否完整
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // load textures
     // -------------
-    unsigned int cubeTexture = loadTexture("../resources/textures/marble.jpg");
+    unsigned int cubeTexture = loadTexture("../resources/textures/container.jpg");
     unsigned int floorTexture = loadTexture("../resources/textures/metal.png");
-    unsigned int grassTexture = loadTexture("../resources/textures/grass.png");
-    unsigned int transparentTexture = loadTexture("../resources/textures/blending_transparent_window.png");
 
     // shader configuration
     // --------------------
     shader.use();
     shader.setInt("texture1", 0);
+
+    screenShader.use();
+    screenShader.setInt("screenTexture", 0);
+
+    // draw as wireframe
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // 6. 渲染循环(RenderLoop)
     while (!glfwWindowShouldClose(window)) // 检查GLFW是否被要求退出
@@ -202,6 +252,9 @@ int main()
 
         // 6.1. 输入控制
         processInput(window); // 键盘控制
+
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
 
         // 6.2.2. 清理屏幕
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);               // 状态设置函数，设置glClear的填充色
@@ -231,24 +284,18 @@ int main()
         model = glm::mat4(1.0f);
         shader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        // vegetation
-        std::map<float, glm::vec3> sorted;
-        for (unsigned int i = 0; i < vegetation.size(); i++)
-        {
-            float distance = glm::length(camera.Position - vegetation[i]);
-            sorted[distance] = vegetation[i];
-        }
-        // glBindVertexArray(transparentVAO);
-        // glBindTexture(GL_TEXTURE_2D, transparentTexture);
-        glBindVertexArray(vegetationVAO);
-        glBindTexture(GL_TEXTURE_2D, transparentTexture);
-        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, it->second);
-            shader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
+
+        // now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+        // clear all relevant buffers
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        screenShader.use();
+        glBindVertexArray(quadVAO);
+        glBindTexture(GL_TEXTURE_2D, textureColorbuffer); // use the color attachment texture as the texture of the quad plane
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // 6.3. 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // window对象交换颜色缓冲（它是一个储存着GLFW窗口每一个像素颜色值的大缓冲），在这一迭代中被用来绘制，并且将作为输出显示在屏幕上
