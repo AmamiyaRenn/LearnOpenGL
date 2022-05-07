@@ -85,6 +85,7 @@ int main()
     Shader shader("../shaders/shader.vs", "../shaders/shader.fs");
     Shader screenShader("../shaders/screenShader.vs", "../shaders/screenShader.fs");
     Shader skyboxShader("../shaders/skyboxShader.vs", "../shaders/skyboxShader.fs");
+    Shader modelShader("../shaders/modelShader.vs", "../shaders/modelShader.fs");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -282,6 +283,7 @@ int main()
     unsigned int cubemapTexture = loadCubemap(faces);
 
     Model nanosuit("../resources/models/nanosuit_reflection/nanosuit.obj");
+    // Model nanosuit("../resources/models/ganyu/ganyu.pmx");
 
     // shader configuration
     // --------------------
@@ -293,6 +295,14 @@ int main()
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
+
+    modelShader.use();
+    modelShader.setInt("skybox", 0);
+
+    // shader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+    // shader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+    // shader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+    // shader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
 
     // draw as wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -345,10 +355,14 @@ int main()
         // shader.setMat4("model", model);
         // glDrawArrays(GL_TRIANGLES, 0, 6);
         // model
+        modelShader.use();
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.25f));
-        shader.setMat4("model", model);
-        nanosuit.Draw(shader);
+        modelShader.setMat4("projection", projection);
+        modelShader.setMat4("view", view);
+        modelShader.setMat4("model", model);
+        modelShader.setVec3("viewPos", camera.Position);
+        nanosuit.Draw(modelShader);
 
         // draw skybox
         glDepthFunc(GL_LEQUAL); // 由于我们强行把深度写为1.0，这样会导致1.0（skybox）=1.0（默认深度）错误，所以要改为小于等于，让skybox通过深度测试
