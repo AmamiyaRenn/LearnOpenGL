@@ -298,8 +298,9 @@ int main()
 
     modelShader.use();
     modelShader.setInt("skybox", 0);
-    modelShader.setVec3("envLight.ambient", 0.05f, 0.05f, 0.05f);
-    modelShader.setVec3("envLight.diffuse", 0.4f, 0.4f, 0.4f);
+    modelShader.setVec3("envLight.ambient", 0.1f, 0.1f, 0.1f);
+    modelShader.setVec3("envLight.diffuse", 0.9f, 0.9f, 0.9f);
+    // modelShader.setVec3("envLight.specular", 1.0f, 1.0f, 1.0f);
     modelShader.setVec3("envLight.specular", 0.5f, 0.5f, 0.5f);
 
     // draw as wireframe

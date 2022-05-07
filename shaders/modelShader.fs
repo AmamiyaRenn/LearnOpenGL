@@ -41,7 +41,12 @@ void main() {
     // vec3 halfwayDir = normalize(viewDir + lightDir);
     // float spec = pow(max(dot(Normal, halfwayDir), 0.0), material.shininess);
     // vec3 specular = envLight.specular * spec * texture(material.specular1, TexCoords).rgb;
+    // float spec = max(,0.0)
+    vec3 skyboxTexture = vec3(texture(skybox, R).r, texture(skybox, R).g, texture(skybox, R).b);
     vec3 specular = envLight.specular * texture(skybox, R).rgb * texture(material.specular1, TexCoords).rgb;
 
-    FragColor = ambient + diffuse + specular;
+    // FragColor = vec4(ambient + diffuse + specular, 1.0);
+    // FragColor = vec4(ambient + diffuse, 1.0); 
+    // FragColor += vec4(specular, 1.0);
+    FragColor = vec4(texture2D(material.diffuse1, TexCoords).rgb + texture(skybox, R).rgb, 1.0);
 }
