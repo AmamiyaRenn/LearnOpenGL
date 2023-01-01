@@ -153,9 +153,9 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, cube_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), &cube_vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), static_cast<void*>(nullptr));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
     glBindVertexArray(0);
     // plane VAO
     unsigned int plane_vao, plane_vbo;
@@ -165,9 +165,9 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, plane_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(plane_vertices), &plane_vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), static_cast<void*>(nullptr));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
     glBindVertexArray(0);
     // screen quad VAO
     unsigned int quad_vao, quad_vbo;
@@ -177,9 +177,9 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), &quad_vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), static_cast<void*>(nullptr));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void*>(2 * sizeof(float)));
     // skybox VAO
     unsigned int skybox_vao, skybox_vbo;
     glGenVertexArrays(1, &skybox_vao);
@@ -188,7 +188,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_vertices), &skybox_vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
 
     unsigned int framebuffer; // 创建一个帧缓冲
     glGenFramebuffers(1, &framebuffer);
@@ -197,7 +197,7 @@ int main()
     unsigned int texture_colorbuffer; // 创建一个纹理图像，并将它作为一个颜色附件附加到帧缓冲上
     glGenTextures(1, &texture_colorbuffer);
     glBindTexture(GL_TEXTURE_2D, texture_colorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -287,7 +287,7 @@ int main()
                                       // Bit)来指定要清空的缓冲
 
         glm::mat4 projection = glm::perspective(
-            glm::radians(camera.Zoom), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f, 100.0f);
+            glm::radians(camera.zoom), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f, 100.0f);
         glm::mat4 view  = camera.getViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
 
@@ -303,7 +303,7 @@ int main()
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
         model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        shader.setVec3("cameraPos", camera.Position);
+        shader.setVec3("cameraPos", camera.position);
         shader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         model = glm::mat4(1.0f);
@@ -323,7 +323,7 @@ int main()
         model_shader.setMat4("projection", projection);
         model_shader.setMat4("view", view);
         model_shader.setMat4("model", model);
-        model_shader.setVec3("viewPos", camera.Position);
+        model_shader.setVec3("viewPos", camera.position);
         nanosuit.draw(model_shader);
 
         // draw skybox

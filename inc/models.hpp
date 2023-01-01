@@ -90,14 +90,14 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
                 .x; // 使用这样一个临时变量的原因是Assimp对向量、矩阵、字符串等都有自己的一套数据类型，它们并不能完美地转换到GLM的数据类型中
         vector.y        = mesh->mVertices[i].y; // TODO：对于上述注释，需要做测试
         vector.z        = mesh->mVertices[i].z;
-        vertex.Position = vector;
+        vertex.position = vector;
         // 处理法线
         if (mesh->HasNormals())
         {
             vector.x      = mesh->mNormals[i].x;
             vector.y      = mesh->mNormals[i].y;
             vector.z      = mesh->mNormals[i].z;
-            vertex.Normal = vector;
+            vertex.normal = vector;
         }
         // 处理纹理坐标
         if (mesh->mTextureCoords[0]) // 网格是否有纹理坐标？
@@ -105,11 +105,11 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
             glm::vec2 texture_vec;
             texture_vec.x = mesh->mTextureCoords[0][i]
                                 .x; // Assimp允许一个模型在一个顶点上有最多8个不同的纹理坐标, 但目前只关心第一组
-            texture_vec.y    = mesh->mTextureCoords[0][i].y;
-            vertex.TexCoords = texture_vec;
+            texture_vec.y     = mesh->mTextureCoords[0][i].y;
+            vertex.tex_coords = texture_vec;
         }
         else
-            vertex.TexCoords = glm::vec2(0.0f);
+            vertex.tex_coords = glm::vec2(0.0f);
         // 填充
         vertices.push_back(vertex);
     }
